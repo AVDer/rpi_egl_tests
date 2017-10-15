@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-O0 -g")
+set(CMAKE_CXX_FLAGS "-O0 -g -Wall -Wextra -Weffc++")
 
-set(SOURCE_FILES main.cpp egl_handler.cpp dispmanx_handler.cpp)
+set(SOURCE_FILES main.cpp egl_handler.cpp dispmanx_handler.cpp shader_program.cpp)
 
 project(eglTest)
 

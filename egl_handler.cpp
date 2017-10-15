@@ -3,7 +3,9 @@
 
 #include "egl_handler.h"
 
-EGLHandler::EGLHandler()
+EGLHandler::EGLHandler():
+    state_(),
+    dispmanx_handler_()
 {
     state_.display = EGL_NO_DISPLAY;
     state_.surface = EGL_NO_SURFACE;
@@ -55,7 +57,7 @@ void EGLHandler::egl_from_dispmanx()
     EGLBoolean result;
     state_.surface = eglCreateWindowSurface(state_.display,
                                             state_.config,
-                                            &native_window(),
+                                            &dispmanx_handler_.native_window(),
                                             NULL);
     assert(state_.surface != EGL_NO_SURFACE);
     // connect the context to the surface
@@ -85,9 +87,9 @@ EGLHandler::~EGLHandler()
     {
         std::cout << "EGL thread resources released ok\n";
     }
-    if (vc_dispmanx_display_close(EGLHandler::dispman_display()) == 0)
+    if (vc_dispmanx_display_close(dispmanx_handler_.dispman_display()) == 0)
     {
-        std::cout << "Dispmanx display rleased ok\n";
+        std::cout << "Dispmanx display released ok\n";
     }
     bcm_host_deinit();
 }

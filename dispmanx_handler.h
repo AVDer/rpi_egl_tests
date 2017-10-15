@@ -9,9 +9,14 @@ public:
   void init();
   EGL_DISPMANX_WINDOW_T& native_window() { return native_window_; }
   DISPMANX_DISPLAY_HANDLE_T& dispman_display() { return dispman_display_; }
+  uint32_t screen_width() const { return screen_width_; }
+  uint32_t screen_height() const { return screen_height_; }
+
 private:
   EGL_DISPMANX_WINDOW_T native_window_;
   DISPMANX_DISPLAY_HANDLE_T dispman_display_;
+  uint32_t screen_width_;
+  uint32_t screen_height_;
 };
 
 #endif
