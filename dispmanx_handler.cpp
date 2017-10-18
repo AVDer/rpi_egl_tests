@@ -17,6 +17,7 @@ void DispmanxHandler::init()
                                         &screen_width_,
                                         &screen_height_);
     assert(success >= 0);
+    std::cout << "Dispmanx screen size: " <<  screen_width_ << " " << screen_height_ << std::endl;
     dst_rect.x = 0;
     dst_rect.height = screen_height_;
     dst_rect.y = 0;
@@ -39,5 +40,5 @@ void DispmanxHandler::init()
     native_window_.height = screen_height_;
     vc_dispmanx_update_submit_sync(dispman_update);
     assert(vc_dispmanx_element_remove(dispman_update, dispman_element) == 0);
-    std::cout << "Got a Dispmanx window\n";
+    std::cout << "Got a Dispmanx window"  << std::endl;
 }

@@ -35,7 +35,7 @@ void ShaderProgram::init(const std::string& vertex_source, const std::string& fr
 
   // Bind vPosition to attribute 0
   glBindAttribLocation(program_id_, 0, "in_position");
-  glBindAttribLocation(program_id_, 1, "in_color");
+  //glBindAttribLocation(program_id_, 1, "in_color");
 
   glLinkProgram(program_id_);
 

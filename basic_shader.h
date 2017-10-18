@@ -7,21 +7,24 @@ namespace BasicShader {
 
   static const GLchar *vertex_shader = R"(
   attribute vec3 in_position;
-  attribute vec3 in_color;
+  attribute vec2 in_tex_coord;
 
-  varying vec3 t_color;
+  varying vec2 t_tex_coord;
 
   void main() {
     gl_Position = vec4(in_position, 1.0);
-    t_color = in_color;
+    t_tex_coord = in_tex_coord;
 }
 )";
 
   static const GLchar *fragment_shader = R"(
-  varying vec3 t_color;
+    varying vec2 t_tex_coord;
+
+    uniform sampler2D u_texture;
 
   void main() {
-    gl_FragColor = vec4(t_color, 1.0);
+    //gl_FragColor = vec4(t_color, 1.0);
+    gl_FragColor =  texture2D(u_texture, t_tex_coord);    
   }
 )";
 
