@@ -2,30 +2,9 @@
 
 #include "basic_shader.h"
 #include "egl_handler.h"
+#include "gl_texture.h"
 #include "shader_program.h"
 #include "tga_file.h"
-
-GLuint CreateSimpleTexture2D(const TGAFile& texture)
-{
-    // Texture object handle
-    GLuint textureId;
-    
-    uint8_t *pixels = texture.data();
-    // Use tightly packed data
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    // Generate a texture object
-    glGenTextures(1, &textureId);
-    // Bind the texture object
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    // Load the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-        texture.width(), texture.height(),
-                 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-    // Set the filtering mode
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    return textureId;
-}
 
 int main(int /*argc*/, char ** /*argv*/)
 {
@@ -54,16 +33,14 @@ int main(int /*argc*/, char ** /*argv*/)
     shader_program.init(BasicShader::vertex_shader, BasicShader::fragment_shader);
     shader_program.use();
 
-    TGAFile texture_tga;
-    texture_tga.load("corsairs.tga");
-
     glClearColor(0.0, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Get the sampler location
     GLint texture_location = glGetUniformLocation (shader_program.shader_id(), "u_texture" );
     // Load the texture
-    GLuint texture_id = CreateSimpleTexture2D(texture_tga);
+    Texture textue(TGAFile("corsairs.tga"));
+    GLuint texture_id = textue.texture_id();
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vertices);
     glEnableVertexAttribArray(0);

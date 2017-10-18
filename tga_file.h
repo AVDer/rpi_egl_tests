@@ -1,5 +1,5 @@
-#ifndef RPI3_TGA_LOADER_H
-#define RPI3_TGA_LOADER_H
+#ifndef RPI3_TGA_FILE_H
+#define RPI3_TGA_FILE_H
 
 #include <iostream>
 #include <string>
@@ -11,6 +11,10 @@ public:
   uint8_t* data() const { return data_; }
   auto width() const { return width_; }
   auto height() const { return height_; }
+
+  TGAFile(const std::string& filename) {
+    load(filename);
+  }
 
   bool load(const std::string& filename) {
     FILE *file_handler;
@@ -83,11 +87,11 @@ public:
     return true;
   }
 private:
-  uint8_t type_code_;
-  uint16_t width_;
-  uint16_t height_;
-  uint8_t bit_count_;
-  uint8_t *data_;
+  uint8_t type_code_ {0};
+  uint16_t width_ {0};
+  uint16_t height_ {0};
+  uint8_t bit_count_ {0};
+  uint8_t *data_ {nullptr};
 };
 
 #endif
