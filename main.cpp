@@ -3,14 +3,14 @@
 #include "basic_shader.h"
 #include "egl_handler.h"
 #include "shader_program.h"
-#include "tga_loader.h"
+#include "tga_file.h"
 
-GLuint CreateSimpleTexture2D(const tga_file_t& texture)
+GLuint CreateSimpleTexture2D(const TGAFile& texture)
 {
     // Texture object handle
     GLuint textureId;
     
-    uint8_t *pixels = texture.imageData;
+    uint8_t *pixels = texture.data();
     // Use tightly packed data
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     // Generate a texture object
@@ -19,7 +19,7 @@ GLuint CreateSimpleTexture2D(const tga_file_t& texture)
     glBindTexture(GL_TEXTURE_2D, textureId);
     // Load the texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-        texture.imageWidth, texture.imageHeight,
+        texture.width(), texture.height(),
                  0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
     // Set the filtering mode
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -54,8 +54,8 @@ int main(int /*argc*/, char ** /*argv*/)
     shader_program.init(BasicShader::vertex_shader, BasicShader::fragment_shader);
     shader_program.use();
 
-    tga_file_t texture_tga;
-    LoadTGAFile("corsairs.tga", &texture_tga);
+    TGAFile texture_tga;
+    texture_tga.load("corsairs.tga");
 
     glClearColor(0.0, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
