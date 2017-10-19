@@ -3,6 +3,7 @@
 #include "basic_shader.h"
 #include "egl_handler.h"
 #include "gl_texture.h"
+#include "omx_facade.h"
 #include "shader_program.h"
 #include "tga_file.h"
 
@@ -58,6 +59,10 @@ int main(int /*argc*/, char ** /*argv*/)
 
     glFlush();
     eglSwapBuffers(egl_handler.state()->display, egl_handler.state()->surface);
-    sleep(5);
+    //sleep(5);
+
+    OMXFacade omx_facade;
+    omx_facade.check_roles();
+
     return 0;
 }
