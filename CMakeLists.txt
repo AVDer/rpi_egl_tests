@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-O0 -g -Wall -Wextra -Weffc++ -DRASPBERRY_PI -DOMX_SKIP64BIT")
+set(CMAKE_CXX_FLAGS "-O0 -g -std=c++14 -Wall -Wextra -DRASPBERRY_PI -DOMX_SKIP64BIT")
 
 set(SOURCE_FILES main.cpp egl_handler.cpp dispmanx_handler.cpp shader_program.cpp omx_facade.cpp)
 
