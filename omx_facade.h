@@ -11,7 +11,7 @@ class OMXFacade
 {
 public:
   OMXFacade();
-  void check_roles();
+  void list_components();
   void get_port_info(const std::string& component_sname, uint32_t port_index);
 
 private:
