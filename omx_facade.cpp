@@ -1,8 +1,7 @@
 
 #include "omx_facade.h"
 
-#include <iostream>
-
+#include "logger.h"
 #include "omx_component.h"
 
 OMXFacade::OMXFacade()
@@ -12,7 +11,7 @@ OMXFacade::OMXFacade()
   OMX_ERRORTYPE err{OMX_Init()};
   if (err != OMX_ErrorNone)
   {
-    std::cout << "OMX_Init() failed" << std::endl;
+    Logger::error("OMX: OMX_Init() failed");
   }
 }
 
@@ -25,11 +24,11 @@ void OMXFacade::list_components()
     err = OMX_ComponentNameEnum(name, OMX_MAX_STRINGNAME_SIZE, i);
     if (OMX_ErrorNone == err)
     {
-      std::cout << "Component is: " << name << std::endl;
+      Logger::debug("OMX: Component is: %s", name);
       //list_roles(name);
     }
   }
-  std::cout << "No more components" << std::endl;
+  Logger::debug("No more components", name);
 }
 
 void OMXFacade::list_roles(char *name)
@@ -40,15 +39,15 @@ void OMXFacade::list_roles(char *name)
   OMX_ERRORTYPE err = OMX_GetRolesOfComponent(name, &roles_number, nullptr);
   if (err != OMX_ErrorNone)
   {
-    std::cout << "Getting roles failed" << std::endl;
+    Logger::error("OMX: Getting roles failed");
     return;
   }
 
-  std::cout << "Number of roles is: " << roles_number << std::endl;
-
+  Logger::debug("Number of roles is: %d", roles_number);
+  
   if (roles_number > MAX_ROLES_NUMBER)
   {
-    std::cout << "Too many roles to list" << std::endl;
+    Logger::error("OMX: Too many roles to list");
     return;
   }
 
@@ -60,17 +59,18 @@ void OMXFacade::list_roles(char *name)
   err = OMX_GetRolesOfComponent(name, &roles_number, roles);
   if (err != OMX_ErrorNone)
   {
-    std::cout << "Getting roles failed" << std::endl;
+    Logger::error("OMX: Getting roles failed");
     return;
   }
   for (OMX_U32 n = 0; n < roles_number; ++n)
   {
-    std::cout << "Role: " << roles[n] << std::endl;
+    Logger::debug("Role: %s", roles[n]);
     free(roles[n]);
   }
 }
 
-void OMXFacade::get_port_info(const std::string &component_sname, uint32_t port_index)
+void OMXFacade::print_component_info(const std::string& component_sname, std::vector<uint32_t> port_indexes)
 {
-  OMXComponent component(component_sname, {port_index});
+  OMXComponent component(component_sname);
+  component.setup_ports(port_indexes);
 }

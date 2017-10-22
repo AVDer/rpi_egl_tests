@@ -106,7 +106,7 @@ static const GLfloat BOX_SIZE {0.7f};
   //sleep(5);
 
   OMXFacade omx_facade;
-  omx_facade.get_port_info("OMX.broadcom.video_render", 90);
+  omx_facade.print_component_info("OMX.broadcom.visualisation");
 
   return 0;
 }

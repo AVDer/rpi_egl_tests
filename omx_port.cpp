@@ -1,7 +1,9 @@
 #include "omx_port.h"
 
 #include <cstring>
-#include <iostream>
+#include <string>
+
+#include "logger.h"
 
 OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(handle)
 {
@@ -11,17 +13,16 @@ OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(ha
   port_definition_.nPortIndex = port_index;
   if (OMX_GetParameter(handle_, OMX_IndexParamPortDefinition, &port_definition_) != OMX_ErrorNone)
   {
-    std::cerr << port_index << ": Failed to get definition" << std::endl;
+    Logger::error("OMX Port: %d: Failed to get definition", port_index);
   }
 }
 
 void OMXPort::print_info()
 {
   std::string domain;
-  std::cout << "-----------------------" << std::endl;
-  std::cout << "Port " << port_definition_.nPortIndex;
-  std::cout << ((port_definition_.eDir == OMX_DirInput) ? " is input port" : " is output port") << std::endl;
-
+  Logger::debug("OMX Port: -----------------------");
+  Logger::debug("OMX Port: Port %d %s", port_definition_.nPortIndex, ((port_definition_.eDir == OMX_DirInput) ? " is input port" : " is output port"));
+  
   switch (port_definition_.eDomain)
   {
   case OMX_PortDomainAudio:
@@ -41,11 +42,11 @@ void OMXPort::print_info()
     break;
   }
 
-  std::cout << "Domain is " << domain << '\n'
-            << "Buffer count " << port_definition_.nBufferCountActual << '\n'
-            << "Buffer minimum count " << port_definition_.nBufferCountMin << '\n'
-            << "Buffer size " << port_definition_.nBufferSize << " bytes" << std::endl;
-  std::cout << "-----------------------" << std::endl;
+  Logger::debug("OMX Port: Domain is %s", domain.c_str());
+  Logger::debug("OMX Port: Buffer count %d", port_definition_.nBufferCountActual);
+  Logger::debug("OMX Port: Buffer minimum count %d", port_definition_.nBufferCountMin);
+  Logger::debug("OMX Port: Buffer size %d bytes", port_definition_.nBufferSize);
+  Logger::debug("OMX Port: -----------------------");
 }
 
 /*

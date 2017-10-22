@@ -1,8 +1,9 @@
 #ifndef RPI3_TGA_FILE_H
 #define RPI3_TGA_FILE_H
 
-#include <iostream>
 #include <string>
+
+#include "logger.h"
 
 class TGAFile
 {
@@ -27,7 +28,7 @@ public:
     file_handler = fopen(filename.c_str(), "rb");
     if (file_handler == nullptr)
     {
-      std::cout << "File " << filename << " can't be opened" << std::endl;
+      Logger::error("File %s can't be opened", filename.c_str());
       return false;
     }
   
@@ -43,7 +44,7 @@ public:
     if (type_code_ != 2 && type_code_ != 3)
     {
       fclose(file_handler);
-      std::cout << "Incorrect type code: " << type_code_ << std::endl;
+      Logger::error("Incorrect type code: %d", type_code_);
       return false;
     }
   
@@ -82,7 +83,7 @@ public:
   
     fclose(file_handler);
   
-    std::cout << "TGA file " << filename << " successfully loaded: " << width_ << "x" << height_ << std::endl;
+    Logger::info("TGA loader: file %s successfully loaded: %dx%d", filename.c_str(), width_, height_);
   
     return true;
   }

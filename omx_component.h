@@ -11,9 +11,13 @@
 
 class OMXComponent {
 public:
-  OMXComponent(const std::string& component_name, std::vector<uint32_t> port_indexes = {});
+  OMXComponent(const std::string& component_name);
+  void setup_ports(std::vector<uint32_t> port_indexes = {});
 
 private:
+
+  void add_defined_ports(OMX_INDEXTYPE index_type);
+
   OMX_HANDLETYPE handle_;
   OMX_VERSIONTYPE spec_version_;
   OMX_VERSIONTYPE comp_version_;
