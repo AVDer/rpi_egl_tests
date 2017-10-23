@@ -1,13 +1,20 @@
 #ifndef RPI3_OMX_SUPPORT_H
 #define RPI3_OMX_SUPPORT_H
 
-#define OMX_INIT_STRUCTURE(a) \
-memset(&(a), 0, sizeof(a)); \
-(a).nSize = sizeof(a); \
-(a).nVersion.nVersion = OMX_VERSION; \
-(a).nVersion.s.nVersionMajor = OMX_VERSION_MAJOR; \
-(a).nVersion.s.nVersionMinor = OMX_VERSION_MINOR; \
-(a).nVersion.s.nRevision = OMX_VERSION_REVISION; \
-(a).nVersion.s.nStep = OMX_VERSION_STEP
+#include <string>
+
+#include <IL/OMX_Core.h>
+
+#define OMX_INIT_STRUCTURE(a)                       \
+  memset(&(a), 0, sizeof(a));                       \
+  (a).nSize = sizeof(a);                            \
+  (a).nVersion.nVersion = OMX_VERSION;              \
+  (a).nVersion.s.nVersionMajor = OMX_VERSION_MAJOR; \
+  (a).nVersion.s.nVersionMinor = OMX_VERSION_MINOR; \
+  (a).nVersion.s.nRevision = OMX_VERSION_REVISION;  \
+  (a).nVersion.s.nStep = OMX_VERSION_STEP;
+
+const std::string omx_error_to_string(OMX_ERRORTYPE err);
+const std::string omx_state_to_string(OMX_STATETYPE state);
 
 #endif

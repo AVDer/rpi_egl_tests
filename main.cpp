@@ -3,6 +3,7 @@
 #include "basic_shader.h"
 #include "egl_handler.h"
 #include "gl_texture.h"
+#include "logger.h"
 #include "omx_facade.h"
 #include "shader_program.h"
 #include "tga_file.h"
@@ -11,12 +12,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-GLuint gl_field_vbo;
-GLuint gl_field_vao;
-GLuint gl_field_ebo;
-
 int main(int /*argc*/, char ** /*argv*/)
 {
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingDebug);
+
   EGLHandler egl_handler;
   egl_handler.init();
   egl_handler.egl_from_dispmanx();
@@ -103,10 +102,8 @@ static const GLfloat BOX_SIZE {0.7f};
     usleep(100000);
   }
 
-  //sleep(5);
-
   OMXFacade omx_facade;
-  omx_facade.print_component_info("OMX.broadcom.visualisation");
+  omx_facade.print_component_info("OMX.broadcom.audio_capture");
 
   return 0;
 }

@@ -3,6 +3,7 @@
 #include <cstring>
 #include <string>
 
+#include "omx_support.h"
 #include "logger.h"
 
 OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(handle)
@@ -17,12 +18,18 @@ OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(ha
   }
 }
 
+void OMXPort::enable(bool state) {
+  if (!state) {
+    OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr);
+  }  
+}
+
 void OMXPort::print_info()
 {
   std::string domain;
   Logger::debug("OMX Port: -----------------------");
   Logger::debug("OMX Port: Port %d %s", port_definition_.nPortIndex, ((port_definition_.eDir == OMX_DirInput) ? " is input port" : " is output port"));
-  
+
   switch (port_definition_.eDomain)
   {
   case OMX_PortDomainAudio:
@@ -30,7 +37,7 @@ void OMXPort::print_info()
     break;
   case OMX_PortDomainVideo:
     domain = "Video";
-    //std::cout << "Video compression format: " << port_definition->format.video.eCompressionFormat << std::endl;
+    get_supported_video_formats();
     break;
   case OMX_PortDomainImage:
     domain = "Image";
@@ -49,95 +56,28 @@ void OMXPort::print_info()
   Logger::debug("OMX Port: -----------------------");
 }
 
-/*
-void get_supported_video_formats(uint32_t port_number)
+void OMXPort::get_supported_video_formats()
 {
-  OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format;
-  video_port_format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
-  video_port_format.nVersion = 
-  setHeader(&sAudioPortFormat, sizeof(OMX_AUDIO_PARAM_PORTFORMATTYPE));
-  sAudioPortFormat.nIndex = 0;
-  sAudioPortFormat.nPortIndex = portNumber;
-  printf("Supported audio formats are:\n");
-  for (;;)
+  OMX_VIDEO_PARAM_PORTFORMATTYPE sVideoPortFormat;
+  OMX_INIT_STRUCTURE(sVideoPortFormat);
+  sVideoPortFormat.nIndex = 0;
+  sVideoPortFormat.nPortIndex = port_definition_.nPortIndex;
+  Logger::debug("OMX Port: Supported video formats are:");
+  while (1)
   {
-    err = OMX_GetParameter(handle,
-                           OMX_IndexParamAudioPortFormat,
-                           &sAudioPortFormat);
+    OMX_ERRORTYPE err = OMX_GetParameter(handle_, OMX_IndexParamVideoPortFormat, &sVideoPortFormat);
     if (err == OMX_ErrorNoMore)
     {
-      printf("No more formats supported\n");
-    }
-    return;
-    // This shouldn't occur, but does with Broadcom library
-    if (sAudioPortFormat.eEncoding == OMX_AUDIO_CodingUnused)
-    {
-      printf("No coding format returned\n");
+      // Logger::debug("OMX Port: No more formats supported");
       return;
     }
-    switch (sAudioPortFormat.eEncoding)
+    /* This shouldn't occur, but does with Broadcom library */
+    if (sVideoPortFormat.eColorFormat == OMX_COLOR_FormatUnused)
     {
-    case OMX_AUDIO_CodingPCM:
-      printf("Supported encoding is PCM\n");
-      getPCMInformation(portNumber);
-      break;
-    case OMX_AUDIO_CodingVORBIS:
-      printf("Supported encoding is Ogg Vorbis\n");
-      break;
-    case OMX_AUDIO_CodingMP3:
-      printf("Supported encoding is MP3\n");
-      getMP3Information(portNumber);
-      break;
-#ifdef RASPBERRY_PI
-    case OMX_AUDIO_CodingFLAC:
-      printf("Supported encoding is FLAC\n");
-      break;
-    case OMX_AUDIO_CodingDDP:
-      printf("Supported encoding is DDP\n");
-      break;
-    case OMX_AUDIO_CodingDTS:
-      printf("Supported encoding is DTS\n");
-      break;
-    case OMX_AUDIO_CodingWMAPRO:
-      printf("Supported encoding is WMAPRO\n");
-      break;
-    case OMX_AUDIO_CodingATRAC3:
-      printf("Supported encoding is ATRAC3\n");
-      break;
-    case OMX_AUDIO_CodingATRACX:
-      printf("Supported encoding is ATRACX\n");
-      break;
-    case OMX_AUDIO_CodingATRACAAL:
-      printf("Supported encoding is ATRACAAL\n");
-      break;
-#endif
-    case OMX_AUDIO_CodingAAC:
-      printf("Supported encoding is AAC\n");
-      break;
-    case OMX_AUDIO_CodingWMA:
-      printf("Supported encoding is WMA\n");
-      break;
-    case OMX_AUDIO_CodingRA:
-      printf("Supported encoding is RA\n");
-      break;
-    case OMX_AUDIO_CodingAMR:
-      printf("Supported encoding is AMR\n");
-      break;
-    case OMX_AUDIO_CodingEVRC:
-      printf("Supported encoding is EVRC\n");
-      break;
+      Logger::debug("OMX Port: No coding format returned");
+      return;
     }
+    Logger::debug("OMX Port: Video format encoding 0x%X; color format 0x%X", sVideoPortFormat.eCompressionFormat, sVideoPortFormat.eColorFormat);
+    sVideoPortFormat.nIndex++;
   }
-case OMX_AUDIO_CodingG726:
-  printf("Supported encoding is G726\n");
-  break;
-case OMX_AUDIO_CodingMIDI:
-  printf("Supported encoding is MIDI\n");
-  break;
-default:
-  printf("Supported encoding is not PCM or MP3 or Vorbis, is 0x%X\n",
-         sAudioPortFormat.eEncoding);
 }
-sAudioPortFormat.nIndex++;
-}
-*/

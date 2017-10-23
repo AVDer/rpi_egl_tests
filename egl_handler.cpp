@@ -70,26 +70,26 @@ EGLHandler::~EGLHandler()
   if (state_.surface != EGL_NO_SURFACE &&
       eglDestroySurface(state_.display, state_.surface))
   {
-    Logger::info("EGL surface destroyed ok");
+    Logger::info("EGL: Surface destroyed ok");
   }
   if (state_.context != EGL_NO_CONTEXT &&
       eglDestroyContext(state_.display, state_.context))
   {
-    Logger::info("EGL main context destroyed ok");
+    Logger::info("EGL: Main context destroyed ok");
   }
   if (state_.display != EGL_NO_DISPLAY &&
       eglTerminate(state_.display))
   {
-    Logger::info("EGL display terminated ok");
+    Logger::info("EGL: Display terminated ok");
   }
 
   if (eglReleaseThread())
   {
-    Logger::info("EGL thread resources released ok");
+    Logger::info("EGL: Thread resources released ok");
   }
   if (vc_dispmanx_display_close(dispmanx_handler_.dispman_display()) == 0)
   {
-    Logger::info("Dispmanx display released ok");
+    Logger::info("Dispmanx: Display released ok");
   }
   bcm_host_deinit();
 }

@@ -3,12 +3,36 @@
 #include <cstring>
 #include <string>
 
+#include "unistd.h"
+
 #include "logger.h"
 #include "omx_support.h"
 
+OMX_ERRORTYPE OMXComponent::cEventHandler(
+    OMX_HANDLETYPE /*hComponent*/,
+    OMX_PTR /*pAppData*/,
+    OMX_EVENTTYPE eEvent,
+    OMX_U32 Data1,
+    OMX_U32 Data2,
+    OMX_PTR /*pEventData*/)
+{
+  Logger::trace("OMX Component: Hi there, I am in the %s callback", __func__);
+  Logger::trace("OMX Component: Event is %d", eEvent);
+  Logger::trace("OMX Component: Param1 is %d", Data1);
+  Logger::trace("OMX Component: Param2 is %d", Data2);
+
+  if (eEvent == OMX_EventCmdComplete && Data1 == OMX_CommandStateSet)
+  {
+    state_ = static_cast<OMX_STATETYPE>(Data2);
+    Logger::debug("OMX Component: state changed to: %s", omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
+  }
+
+  return OMX_ErrorNone;
+}
+
 OMXComponent::OMXComponent(const std::string &component_sname)
 {
-  OMX_CALLBACKTYPE callbacks = {.EventHandler = nullptr,
+  OMX_CALLBACKTYPE callbacks = {.EventHandler = cEventHandler,
                                 .EmptyBufferDone = nullptr,
                                 .FillBufferDone = nullptr};
 
@@ -32,7 +56,6 @@ OMXComponent::OMXComponent(const std::string &component_sname)
 
   Logger::info("OMX Component: handler obtained. Component name: %s version %d.%d, Spec version: %d.%d",
                component_name, comp_version_.s.nVersionMajor, comp_version_.s.nVersionMinor, spec_version_.s.nVersionMajor, spec_version_.s.nVersionMinor);
-
 }
 
 void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
@@ -52,9 +75,31 @@ void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
     add_defined_ports(OMX_IndexParamOtherInit);
   }
 
-  for (auto port : ports_)
+  //for (auto port : ports_)
+  //{
+  //    port.print_info();
+  //}
+}
+
+void OMXComponent::print_state()
+{
+  OMX_STATETYPE state;
+  OMX_ERRORTYPE err{OMX_GetState(handle_, &state)};
+  if (err != OMX_ErrorNone)
   {
-    port.print_info();
+    Logger::error("OMX Component: Error on getting state");
+    return;
+  }
+  Logger::debug("OMX Component: Component state: %s", omx_state_to_string(state).c_str());
+}
+
+void OMXComponent::change_state(OMX_STATETYPE new_state)
+{
+  required_state_ = new_state;
+  OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
+  while (state_ != required_state_)
+  {
+    usleep(100000);
   }
 }
 
@@ -73,3 +118,6 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
     ports_.emplace_back(OMXPort(i, handle_));
   }
 }
+
+OMX_STATETYPE OMXComponent::state_{OMX_StateInvalid};          // for now
+OMX_STATETYPE OMXComponent::required_state_{OMX_StateInvalid}; // for now

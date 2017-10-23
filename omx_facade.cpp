@@ -73,4 +73,10 @@ void OMXFacade::print_component_info(const std::string& component_sname, std::ve
 {
   OMXComponent component(component_sname);
   component.setup_ports(port_indexes);
+  component.print_state();
+  component.disable_ports();
+  component.change_state(OMX_StateIdle);
+  component.print_state();
+  component.change_state(OMX_StateExecuting);
+  component.print_state();
 }
