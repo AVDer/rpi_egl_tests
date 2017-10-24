@@ -13,7 +13,7 @@ class OMXFacade
 public:
   OMXFacade();
   void list_components();
-  void print_component_info(const std::string& component_sname, std::vector<uint32_t> port_indexes = {});
+  void decode_file(const std::string& filename);
 
 private:
   static const uint32_t MAX_ROLES_NUMBER {32};

@@ -14,7 +14,7 @@
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-  Logger::set_logging_level(Logger::LoggingLevel::LoggingDebug);
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingTrace);
 
   EGLHandler egl_handler;
   egl_handler.init();
@@ -103,7 +103,7 @@ static const GLfloat BOX_SIZE {0.7f};
   }
 
   OMXFacade omx_facade;
-  omx_facade.print_component_info("OMX.broadcom.audio_capture");
+  omx_facade.decode_file("test.h264");
 
   return 0;
 }

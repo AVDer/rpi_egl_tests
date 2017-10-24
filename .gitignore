@@ -35,5 +35,8 @@ CMakeFiles
 cmake_install.cmake
 Makefile
 
-#IDE files
+# IDE files
 .vscode
+
+# Media files
+test.h264

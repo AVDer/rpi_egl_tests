@@ -4,6 +4,7 @@
 #include <string>
 
 #include <IL/OMX_Core.h>
+#include <IL/OMX_Video.h>
 
 #define OMX_INIT_STRUCTURE(a)                       \
   memset(&(a), 0, sizeof(a));                       \
@@ -16,5 +17,6 @@
 
 const std::string omx_error_to_string(OMX_ERRORTYPE err);
 const std::string omx_state_to_string(OMX_STATETYPE state);
+const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec);
 
 #endif

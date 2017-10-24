@@ -25,10 +25,10 @@ void OMXFacade::list_components()
     if (OMX_ErrorNone == err)
     {
       Logger::debug("OMX: Component is: %s", name);
-      //list_roles(name);
+      list_roles(name);
     }
   }
-  Logger::debug("No more components", name);
+  Logger::debug("OMX: No more components", name);
 }
 
 void OMXFacade::list_roles(char *name)
@@ -43,7 +43,7 @@ void OMXFacade::list_roles(char *name)
     return;
   }
 
-  Logger::debug("Number of roles is: %d", roles_number);
+  Logger::debug("OMX: Number of roles is: %d", roles_number);
   
   if (roles_number > MAX_ROLES_NUMBER)
   {
@@ -64,15 +64,15 @@ void OMXFacade::list_roles(char *name)
   }
   for (OMX_U32 n = 0; n < roles_number; ++n)
   {
-    Logger::debug("Role: %s", roles[n]);
+    Logger::debug("OMX: Role: %s", roles[n]);
     free(roles[n]);
   }
 }
 
-void OMXFacade::print_component_info(const std::string& component_sname, std::vector<uint32_t> port_indexes)
+void OMXFacade::decode_file(const std::string& /*filename*/)
 {
-  OMXComponent component(component_sname);
-  component.setup_ports(port_indexes);
+  OMXComponent component("OMX.broadcom.video_decode");
+  component.setup_ports();
   component.print_state();
   component.disable_ports();
   component.change_state(OMX_StateIdle);

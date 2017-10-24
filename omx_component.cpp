@@ -8,22 +8,24 @@
 #include "logger.h"
 #include "omx_support.h"
 
-OMX_ERRORTYPE OMXComponent::cEventHandler(
+OMX_ERRORTYPE omx_event_handler(
     OMX_HANDLETYPE /*hComponent*/,
-    OMX_PTR /*pAppData*/,
+    OMX_PTR pAppData,
     OMX_EVENTTYPE eEvent,
     OMX_U32 Data1,
     OMX_U32 Data2,
     OMX_PTR /*pEventData*/)
 {
-  Logger::trace("OMX Component: Hi there, I am in the %s callback", __func__);
+  Logger::trace("OMX Component: Event callback for component: 0x%X", pAppData);
   Logger::trace("OMX Component: Event is %d", eEvent);
   Logger::trace("OMX Component: Param1 is %d", Data1);
   Logger::trace("OMX Component: Param2 is %d", Data2);
 
+  OMXComponent* component = reinterpret_cast<OMXComponent*>(pAppData);
+
   if (eEvent == OMX_EventCmdComplete && Data1 == OMX_CommandStateSet)
   {
-    state_ = static_cast<OMX_STATETYPE>(Data2);
+    component->state_ = static_cast<OMX_STATETYPE>(Data2);
     Logger::debug("OMX Component: state changed to: %s", omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
   }
 
@@ -32,7 +34,7 @@ OMX_ERRORTYPE OMXComponent::cEventHandler(
 
 OMXComponent::OMXComponent(const std::string &component_sname)
 {
-  OMX_CALLBACKTYPE callbacks = {.EventHandler = cEventHandler,
+  OMX_CALLBACKTYPE callbacks = {.EventHandler = omx_event_handler,
                                 .EmptyBufferDone = nullptr,
                                 .FillBufferDone = nullptr};
 
@@ -40,7 +42,7 @@ OMXComponent::OMXComponent(const std::string &component_sname)
   strcpy(component_name, component_sname.c_str());
 
   // Ask the core for a handle to the component
-  OMX_ERRORTYPE err = OMX_GetHandle(&handle_, component_name, NULL, &callbacks);
+  OMX_ERRORTYPE err = OMX_GetHandle(&handle_, component_name, this, &callbacks);
   if (err != OMX_ErrorNone)
   {
     Logger::error("OMX Component: %s: OMX_GetHandle failed", component_name);
@@ -54,8 +56,9 @@ OMXComponent::OMXComponent(const std::string &component_sname)
     Logger::error("OMX Component: %s: OMX_GetComponentVersion failed", component_name);
   }
 
-  Logger::info("OMX Component: handler obtained. Component name: %s version %d.%d, Spec version: %d.%d",
-               component_name, comp_version_.s.nVersionMajor, comp_version_.s.nVersionMinor, spec_version_.s.nVersionMajor, spec_version_.s.nVersionMinor);
+  Logger::info("OMX Component: [0x%X] handler obtained. Component name: %s version %d.%d, Spec version: %d.%d",
+                this, component_name, comp_version_.s.nVersionMajor, comp_version_.s.nVersionMinor,
+               spec_version_.s.nVersionMajor, spec_version_.s.nVersionMinor);
 }
 
 void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
@@ -64,7 +67,7 @@ void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
   {
     for (auto port : port_indexes)
     {
-      ports_.emplace_back(OMXPort(port, handle_));
+      ports_[port] = new OMXPort(port, handle_);
     }
   }
   else
@@ -75,10 +78,10 @@ void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
     add_defined_ports(OMX_IndexParamOtherInit);
   }
 
-  //for (auto port : ports_)
-  //{
-  //    port.print_info();
-  //}
+  for (auto port : ports_)
+  {
+      port.second->print_info();
+  }
 }
 
 void OMXComponent::print_state()
@@ -90,16 +93,21 @@ void OMXComponent::print_state()
     Logger::error("OMX Component: Error on getting state");
     return;
   }
-  Logger::debug("OMX Component: Component state: %s", omx_state_to_string(state).c_str());
+  Logger::info("OMX Component: Component state: %s", omx_state_to_string(state).c_str());
 }
 
 void OMXComponent::change_state(OMX_STATETYPE new_state)
 {
   required_state_ = new_state;
   OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
+  uint32_t counter {0};
   while (state_ != required_state_)
   {
-    usleep(100000);
+    if (counter++ >= STATE_CHANGE_TIME / WAIT_SLICE) {
+      Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(required_state_).c_str());
+      break;
+    }
+    usleep(WAIT_SLICE);
   }
 }
 
@@ -115,9 +123,6 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
   }
   for (auto i = param.nStartPortNumber; i < param.nStartPortNumber + param.nPorts; ++i)
   {
-    ports_.emplace_back(OMXPort(i, handle_));
+    ports_[i] = new OMXPort(i, handle_);
   }
 }
-
-OMX_STATETYPE OMXComponent::state_{OMX_StateInvalid};          // for now
-OMX_STATETYPE OMXComponent::required_state_{OMX_StateInvalid}; // for now

@@ -103,3 +103,30 @@ const std::string omx_state_to_string(OMX_STATETYPE state)
     return "State unknown";
   }
 }
+
+const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec)
+{
+  switch (codec)
+  {
+  case OMX_VIDEO_CodingUnused:
+    return "Unknown";
+  case OMX_VIDEO_CodingAutoDetect:
+    return "Autodetect";
+  case OMX_VIDEO_CodingMPEG2:
+    return "MPEG-2 / H.262";
+  case OMX_VIDEO_CodingH263:
+    return "H.263";
+  case OMX_VIDEO_CodingMPEG4:
+    return "MPEG-4";
+  case OMX_VIDEO_CodingWMV:
+    return "WMV";
+  case OMX_VIDEO_CodingRV:
+    return "Real video";
+  case OMX_VIDEO_CodingAVC:
+    return "H.264 / AVC";
+  case OMX_VIDEO_CodingMJPEG:
+    return "Motion JPEG";
+  default:
+    return "Non standard";
+  }
+}
