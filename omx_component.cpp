@@ -67,7 +67,7 @@ void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
   {
     for (auto port : port_indexes)
     {
-      ports_[port] = new OMXPort(port, handle_);
+      ports_[port].reset(new OMXPort(port, handle_));
     }
   }
   else
@@ -123,6 +123,6 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
   }
   for (auto i = param.nStartPortNumber; i < param.nStartPortNumber + param.nPorts; ++i)
   {
-    ports_[i] = new OMXPort(i, handle_);
+    ports_[i].reset(new OMXPort(i, handle_));
   }
 }

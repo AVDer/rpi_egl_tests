@@ -50,7 +50,7 @@ static const GLfloat BOX_SIZE {0.7f};
     0, 4, 7, 7, 3, 0
   };
 */
-
+/*
   glViewport(0, 0, egl_handler.screen_width(), egl_handler.screen_height());
 
   ShaderProgram shader_program;
@@ -101,7 +101,7 @@ static const GLfloat BOX_SIZE {0.7f};
 
     usleep(100000);
   }
-
+*/
   OMXFacade omx_facade;
   omx_facade.decode_file("test.h264");
 

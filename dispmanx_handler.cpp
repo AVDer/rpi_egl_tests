@@ -41,5 +41,5 @@ void DispmanxHandler::init()
     native_window_.height = screen_height_;
     vc_dispmanx_update_submit_sync(dispman_update);
     assert(vc_dispmanx_element_remove(dispman_update, dispman_element) == 0);
-    Logger::info("Dispmanx: Got a window");
+    Logger::debug("Dispmanx: Got a window");
 }

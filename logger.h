@@ -47,7 +47,7 @@ public:
   static void warning(I... items) {
     if (logging_level_ <= LoggingWarning) {
       print_time();
-      printf("%s", KYEL);
+      printf("%s", KMAG);
       printf("Warn : "); printf(items...); printf("\n");
       printf("%s", KNRM);
     }

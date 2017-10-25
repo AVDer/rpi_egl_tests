@@ -6,7 +6,7 @@
 #include "omx_support.h"
 #include "logger.h"
 
-OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(handle)
+OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(handle)
 {
   memset(&port_definition_, 0, sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
   port_definition_.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
@@ -16,13 +16,57 @@ OMXPort::OMXPort(uint32_t port_index, const OMX_HANDLETYPE &handle) : handle_(ha
   {
     Logger::error("OMX Port: %d: Failed to get definition", port_index);
   }
+  //buffer_header_ = new OMX_BUFFERHEADERTYPE;
 }
 
 void OMXPort::enable(bool state)
 {
   if (!state)
   {
-    OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr);
+    OMX_ERRORTYPE error = OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr);
+    if (error == OMX_ErrorNone) {
+      Logger::trace("OMX Port: Port %d disabled", port_definition_.nPortIndex);
+    }
+    else {
+      Logger::error("OMX Port: Port %d can't be disabled: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());  
+    }
+  }
+  else
+  {
+    OMX_ERRORTYPE error = OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr);
+    if (error == OMX_ErrorNone) {
+      Logger::trace("OMX Port: Port %d enabled", port_definition_.nPortIndex);
+    }
+    else {
+      Logger::error("OMX Port: Port %d can't be enabled: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());  
+    }
+  }
+}
+
+void OMXPort::allocate_buffer() {
+  OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_header_, port_definition_.nPortIndex, this, port_definition_.nBufferSize);
+  if (error == OMX_ErrorNone) {
+    Logger::trace("OMX Port: Port %d buffer for %d bytes allocated", port_definition_.nPortIndex, port_definition_.nBufferSize);
+  }
+  else {
+    Logger::error("OMX Port: Port %d buffer allocation failed: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());
+  }
+}
+
+void OMXPort::set_video_format(OMX_VIDEO_CODINGTYPE codec)
+{
+  OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format;
+  memset(&video_port_format, 0, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
+  video_port_format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
+  video_port_format.nVersion.nVersion = OMX_VERSION;
+  video_port_format.nPortIndex = port_definition_.nPortIndex;
+  video_port_format.eCompressionFormat = codec;
+  OMX_ERRORTYPE error = OMX_SetParameter(handle_, OMX_IndexParamVideoPortFormat, &video_port_format);
+  if (error == OMX_ErrorNone) {
+    Logger::trace("OMX Port: Port %d video format changed to %s", port_definition_.nPortIndex, omx_vcodec_to_string(codec).c_str());
+  }
+  else {
+    Logger::error("OMX Port: Port %d codec setup failed: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());
   }
 }
 

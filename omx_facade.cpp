@@ -3,6 +3,7 @@
 
 #include "logger.h"
 #include "omx_component.h"
+#include "support_functions.h"
 
 OMXFacade::OMXFacade()
 {
@@ -69,8 +70,9 @@ void OMXFacade::list_roles(char *name)
   }
 }
 
-void OMXFacade::decode_file(const std::string& /*filename*/)
+void OMXFacade::decode_file(const std::string& filename)
 {
+  get_file_size(filename);
   OMXComponent component("OMX.broadcom.video_decode");
   component.setup_ports();
   component.print_state();
@@ -79,4 +81,7 @@ void OMXFacade::decode_file(const std::string& /*filename*/)
   component.print_state();
   component.change_state(OMX_StateExecuting);
   component.print_state();
+  component.enable_ports();
+  component.allocate_buffers();
+  component.set_video_format(130, OMX_VIDEO_CodingAVC);
 }

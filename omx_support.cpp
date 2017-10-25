@@ -113,7 +113,7 @@ const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec)
   case OMX_VIDEO_CodingAutoDetect:
     return "Autodetect";
   case OMX_VIDEO_CodingMPEG2:
-    return "MPEG-2 / H.262";
+    return "MPEG-2/H.262";
   case OMX_VIDEO_CodingH263:
     return "H.263";
   case OMX_VIDEO_CodingMPEG4:
@@ -123,7 +123,7 @@ const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec)
   case OMX_VIDEO_CodingRV:
     return "Real video";
   case OMX_VIDEO_CodingAVC:
-    return "H.264 / AVC";
+    return "H.264/AVC";
   case OMX_VIDEO_CodingMJPEG:
     return "Motion JPEG";
   default:

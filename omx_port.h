@@ -6,15 +6,19 @@
 
 class OMXPort {
 public:
-  OMXPort(uint32_t port_index, const OMX_HANDLETYPE& handle);
+  OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE& handle);
   void print_info();
   void enable(bool state = true);
+  void allocate_buffer();
+  void set_video_format(OMX_VIDEO_CODINGTYPE codec);
 
 private:
 
   void get_supported_video_formats();
 
   OMX_PARAM_PORTDEFINITIONTYPE port_definition_;
+  OMX_BUFFERHEADERTYPE* buffer_header_;
+  
   const OMX_HANDLETYPE& handle_;
 };
 
