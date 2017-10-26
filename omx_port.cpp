@@ -23,22 +23,14 @@ void OMXPort::enable(bool state)
 {
   if (!state)
   {
-    OMX_ERRORTYPE error = OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr);
-    if (error == OMX_ErrorNone) {
-      Logger::trace("OMX Port: Port %d disabled", port_definition_.nPortIndex);
-    }
-    else {
-      Logger::error("OMX Port: Port %d can't be disabled: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());  
+    if (OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr) != OMX_ErrorNone) {
+      Logger::error("OMX Port: Port %d can't be disabled", port_definition_.nPortIndex);
     }
   }
   else
   {
-    OMX_ERRORTYPE error = OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr);
-    if (error == OMX_ErrorNone) {
-      Logger::trace("OMX Port: Port %d enabled", port_definition_.nPortIndex);
-    }
-    else {
-      Logger::error("OMX Port: Port %d can't be enabled: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());  
+    if (OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr) != OMX_ErrorNone) {
+      Logger::error("OMX Port: Port %d can't be enabled", port_definition_.nPortIndex);
     }
   }
 }

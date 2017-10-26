@@ -130,3 +130,39 @@ const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec)
     return "Non standard";
   }
 }
+
+const std::string omx_event_to_string(OMX_EVENTTYPE event)
+{
+  switch (event)
+  {
+  case OMX_EventCmdComplete:
+    return "OMX_EventCmdComplete";
+  case OMX_EventError:
+    return "OMX_EventError";
+  case OMX_EventMark:
+    return "OMX_EventMark";
+  case OMX_EventPortSettingsChanged:
+    return "OMX_EventPortSettingsChanged";
+  case OMX_EventBufferFlag:
+    return "OMX_EventBufferFlag";
+  case OMX_EventResourcesAcquired:
+    return "OMX_EventResourcesAcquired";
+  }
+}
+
+const std::string omx_command_to_string(OMX_COMMANDTYPE command)
+{
+  switch (command)
+  {
+  case OMX_CommandStateSet:
+    return "OMX_CommandStateSet";
+  case OMX_CommandFlush:
+    return "OMX_CommandFlush";
+  case OMX_CommandPortDisable:
+    return "OMX_CommandPortDisable";
+  case OMX_CommandPortEnable:
+    return "OMX_CommandPortEnable";
+  case OMX_CommandMarkBuffer:
+    return "OMX_CommandMarkBuffer";
+  }
+}

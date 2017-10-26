@@ -16,18 +16,40 @@ OMX_ERRORTYPE omx_event_handler(
     OMX_U32 Data2,
     OMX_PTR /*pEventData*/)
 {
-  Logger::trace("OMX Component: Event callback for component: 0x%X", pAppData);
+  Logger::trace("OMX Component: [0x%X]: Event %s received", pAppData, omx_event_to_string(eEvent).c_str());
+
+  OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
+
+  switch (eEvent)
+  {
+  case OMX_EventCmdComplete:
+    Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
+    switch (Data1)
+    {
+    case OMX_CommandStateSet:
+      component->state_ = static_cast<OMX_STATETYPE>(Data2);
+      Logger::debug("OMX Component: [0x%X]: State changed to: %s", pAppData, omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
+      break;
+    case OMX_CommandFlush:
+    break;
+    case OMX_CommandPortDisable:
+    Logger::trace("OMX Component: [0x%X]: Port %d disabled", pAppData, Data2);
+    break;
+    case OMX_CommandPortEnable:
+    Logger::trace("OMX Component: [0x%X]: Port %d enabled", pAppData, Data2);
+    break;
+    case OMX_CommandMarkBuffer:
+    break;
+    default:
+    break;
+    }
+  }
+
+  /*
   Logger::trace("OMX Component: Event is %d", eEvent);
   Logger::trace("OMX Component: Param1 is %d", Data1);
   Logger::trace("OMX Component: Param2 is %d", Data2);
-
-  OMXComponent* component = reinterpret_cast<OMXComponent*>(pAppData);
-
-  if (eEvent == OMX_EventCmdComplete && Data1 == OMX_CommandStateSet)
-  {
-    component->state_ = static_cast<OMX_STATETYPE>(Data2);
-    Logger::debug("OMX Component: state changed to: %s", omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
-  }
+  */
 
   return OMX_ErrorNone;
 }
@@ -57,7 +79,7 @@ OMXComponent::OMXComponent(const std::string &component_sname)
   }
 
   Logger::info("OMX Component: [0x%X] handler obtained. Component name: %s version %d.%d, Spec version: %d.%d",
-                this, component_name, comp_version_.s.nVersionMajor, comp_version_.s.nVersionMinor,
+               this, component_name, comp_version_.s.nVersionMajor, comp_version_.s.nVersionMinor,
                spec_version_.s.nVersionMajor, spec_version_.s.nVersionMinor);
 }
 
@@ -80,7 +102,7 @@ void OMXComponent::setup_ports(std::vector<uint32_t> port_indexes)
 
   for (auto port : ports_)
   {
-      port.second->print_info();
+    port.second->print_info();
   }
 }
 
@@ -99,11 +121,13 @@ void OMXComponent::print_state()
 void OMXComponent::change_state(OMX_STATETYPE new_state)
 {
   required_state_ = new_state;
+  Logger::debug("OMX Component: 0x%X changed request to: %s", this, omx_state_to_string(new_state).c_str());
   OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
-  uint32_t counter {0};
+  uint32_t counter{0};
   while (state_ != required_state_)
   {
-    if (counter++ >= STATE_CHANGE_TIME / WAIT_SLICE) {
+    if (counter++ >= STATE_CHANGE_TIME / WAIT_SLICE)
+    {
       Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(required_state_).c_str());
       break;
     }
@@ -124,5 +148,37 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
   for (auto i = param.nStartPortNumber; i < param.nStartPortNumber + param.nPorts; ++i)
   {
     ports_[i].reset(new OMXPort(i, handle_));
+  }
+}
+
+void OMXComponent::enable_ports(bool state, std::vector<OMX_U32> port_indexes)
+{
+  if (port_indexes.empty())
+  {
+    for (auto &port : ports_)
+      port.second->enable(state);
+  }
+  else
+  {
+    for (OMX_U32 i : port_indexes)
+    {
+      ports_[i]->enable(state);
+    }
+  }
+}
+
+void OMXComponent::allocate_buffers(std::vector<OMX_U32> port_indexes)
+{
+  if (port_indexes.empty())
+  {
+    for (auto &port : ports_)
+      port.second->allocate_buffer();
+  }
+  else
+  {
+    for (OMX_U32 i : port_indexes)
+    {
+      ports_[i]->allocate_buffer();
+    }
   }
 }

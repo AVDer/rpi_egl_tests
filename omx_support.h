@@ -18,5 +18,7 @@
 const std::string omx_error_to_string(OMX_ERRORTYPE err);
 const std::string omx_state_to_string(OMX_STATETYPE state);
 const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec);
+const std::string omx_event_to_string(OMX_EVENTTYPE event);
+const std::string omx_command_to_string(OMX_COMMANDTYPE command);
 
 #endif
