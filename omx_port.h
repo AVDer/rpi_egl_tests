@@ -9,6 +9,8 @@ public:
   OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE& handle);
   void print_info();
   void enable(bool state = true);
+  void set_enabled(bool state = true) {enabled_ = state;};
+  bool enabled() const {return enabled_;}
   void allocate_buffer();
   void set_video_format(OMX_VIDEO_CODINGTYPE codec);
 
@@ -18,6 +20,7 @@ private:
 
   OMX_PARAM_PORTDEFINITIONTYPE port_definition_;
   OMX_BUFFERHEADERTYPE* buffer_header_;
+  bool enabled_ {true};
   
   const OMX_HANDLETYPE& handle_;
 };

@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 
-#include "unistd.h"
+#include <unistd.h>
 
 #include "logger.h"
 #include "omx_support.h"
@@ -27,16 +27,18 @@ OMX_ERRORTYPE omx_event_handler(
     switch (Data1)
     {
     case OMX_CommandStateSet:
-      component->state_ = static_cast<OMX_STATETYPE>(Data2);
       Logger::debug("OMX Component: [0x%X]: State changed to: %s", pAppData, omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
+      component->state_ = static_cast<OMX_STATETYPE>(Data2);
       break;
     case OMX_CommandFlush:
     break;
     case OMX_CommandPortDisable:
     Logger::trace("OMX Component: [0x%X]: Port %d disabled", pAppData, Data2);
+    component->ports_[Data2]->set_enabled(false);
     break;
     case OMX_CommandPortEnable:
     Logger::trace("OMX Component: [0x%X]: Port %d enabled", pAppData, Data2);
+    component->ports_[Data2]->set_enabled(true);
     break;
     case OMX_CommandMarkBuffer:
     break;

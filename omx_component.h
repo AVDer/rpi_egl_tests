@@ -26,9 +26,6 @@ public:
 
 private:
 
-  static const uint32_t WAIT_SLICE {100'000}; // 100ms
-  static const uint32_t STATE_CHANGE_TIME {5'000'000}; // 1s
-
   void add_defined_ports(OMX_INDEXTYPE index_type);
 
   OMX_HANDLETYPE handle_ {nullptr};

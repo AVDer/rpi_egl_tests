@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <string>
+#include <unistd.h>
 
 #include "omx_support.h"
 #include "logger.h"
@@ -20,18 +21,30 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
 }
 
 void OMXPort::enable(bool state)
-{
+{  
   if (!state)
   {
-    if (OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr) != OMX_ErrorNone) {
-      Logger::error("OMX Port: Port %d can't be disabled", port_definition_.nPortIndex);
-    }
+    OMX_SendCommand(handle_, OMX_CommandPortDisable, port_definition_.nPortIndex, nullptr);
   }
   else
   {
-    if (OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr) != OMX_ErrorNone) {
-      Logger::error("OMX Port: Port %d can't be enabled", port_definition_.nPortIndex);
+    OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr);
+  }
+  /*
+  uint32_t counter{0};
+  while (enabled_ != state)
+  {
+    if (counter++ >= PORT_SWITCH_TIME / WAIT_SLICE)
+    {
+      Logger::warning("OMX Port: Port %d can't change state to %d", port_definition_.nPortIndex, state);
+      break;
     }
+    usleep(WAIT_SLICE);
+  }
+  */
+  usleep(WAIT_SLICE * 3);
+  if (enabled_ != state) {
+    Logger::warning("OMX Port: Port %d can't change state to %d", port_definition_.nPortIndex, state);
   }
 }
 

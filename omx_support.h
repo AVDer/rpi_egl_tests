@@ -6,6 +6,11 @@
 #include <IL/OMX_Core.h>
 #include <IL/OMX_Video.h>
 
+static const uint32_t WAIT_SLICE {100'000}; // 100ms
+static const uint32_t STATE_CHANGE_TIME {5'000'000}; // 5s
+static const uint32_t PORT_SWITCH_TIME {5'000'000}; // 5s
+
+
 #define OMX_INIT_STRUCTURE(a)                       \
   memset(&(a), 0, sizeof(a));                       \
   (a).nSize = sizeof(a);                            \
