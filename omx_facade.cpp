@@ -73,17 +73,19 @@ void OMXFacade::list_roles(char *name)
 void OMXFacade::decode_file(const std::string& filename)
 {
   get_file_size(filename);
-  OMXComponent component("OMX.broadcom.image_encode");
+  OMXComponent component("OMX.broadcom.video_decode");
   component.setup_ports();
   component.print_state();
   component.enable_ports(false);
   component.change_state(OMX_StateIdle);
+  component.wait_state(OMX_StateIdle);
   component.print_state();
-  component.enable_ports(true, {340});
-  component.allocate_buffers({340});
-  component.enable_ports(true, {341});
-  component.allocate_buffers({341});
   component.change_state(OMX_StateExecuting);
+  component.wait_state(OMX_StateExecuting);
   component.print_state();
-  //component.set_video_format(130, OMX_VIDEO_CodingAVC);
+  component.set_video_format(130, OMX_VIDEO_CodingAVC);
+  component.enable_ports(true, {130});
+  component.allocate_buffers({130});
+  component.wait_port_state(130, true);
+  sleep(10);
 }

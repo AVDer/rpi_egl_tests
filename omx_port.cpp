@@ -1,5 +1,6 @@
 #include "omx_port.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <unistd.h>
@@ -13,11 +14,13 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
   port_definition_.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
   port_definition_.nVersion.nVersion = OMX_VERSION;
   port_definition_.nPortIndex = port_index;
-  if (OMX_GetParameter(handle_, OMX_IndexParamPortDefinition, &port_definition_) != OMX_ErrorNone)
-  {
-    Logger::error("OMX Port: %d: Failed to get definition", port_index);
+  get_definition();
+}
+
+OMXPort::~OMXPort() {
+  if (buffer_) {
+    delete[] buffer_;
   }
-  //buffer_header_ = new OMX_BUFFERHEADERTYPE;
 }
 
 void OMXPort::enable(bool state)
@@ -30,28 +33,34 @@ void OMXPort::enable(bool state)
   {
     OMX_SendCommand(handle_, OMX_CommandPortEnable, port_definition_.nPortIndex, nullptr);
   }
-  /*
+}
+
+bool OMXPort::enabled() {
+  get_definition();
+  return port_definition_.bEnabled;
+}
+
+void OMXPort::wait_state(bool state) {
   uint32_t counter{0};
-  while (enabled_ != state)
+  while (enabled() != state)
   {
     if (counter++ >= PORT_SWITCH_TIME / WAIT_SLICE)
     {
       Logger::warning("OMX Port: Port %d can't change state to %d", port_definition_.nPortIndex, state);
-      break;
+      return;
     }
     usleep(WAIT_SLICE);
   }
-  */
-  usleep(WAIT_SLICE * 3);
-  if (enabled_ != state) {
-    Logger::warning("OMX Port: Port %d can't change state to %d", port_definition_.nPortIndex, state);
-  }
+  Logger::trace("OMX Port: Port %d changed state to %d", port_definition_.nPortIndex, state);
 }
 
 void OMXPort::allocate_buffer() {
-  OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_header_, port_definition_.nPortIndex, this, port_definition_.nBufferSize);
+  buffer_ = new uint8_t[port_definition_.nBufferSize];
+  OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &buffer_header_, port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffer_);
+  //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_header_, port_definition_.nPortIndex, this, port_definition_.nBufferSize);
   if (error == OMX_ErrorNone) {
-    Logger::trace("OMX Port: Port %d buffer for %d bytes allocated", port_definition_.nPortIndex, port_definition_.nBufferSize);
+    Logger::trace("OMX Port: Port %d buffer for %d bytes allocated. [0x%X] vs [0x%X]", port_definition_.nPortIndex, port_definition_.nBufferSize,
+    buffer_, buffer_header_);
   }
   else {
     Logger::error("OMX Port: Port %d buffer allocation failed: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());
@@ -131,5 +140,12 @@ void OMXPort::get_supported_video_formats()
     Logger::debug("OMX Port: Video format encoding %s; color format 0x%X",
                   omx_vcodec_to_string(sVideoPortFormat.eCompressionFormat).c_str(), sVideoPortFormat.eColorFormat);
     sVideoPortFormat.nIndex++;
+  }
+}
+
+void OMXPort::get_definition() {
+  if (OMX_GetParameter(handle_, OMX_IndexParamPortDefinition, &port_definition_) != OMX_ErrorNone)
+  {
+    Logger::error("OMX Port: %d: Failed to get definition", port_definition_.nPortIndex);
   }
 }

@@ -16,14 +16,14 @@ OMX_ERRORTYPE omx_event_handler(
     OMX_U32 Data2,
     OMX_PTR /*pEventData*/)
 {
-  Logger::trace("OMX Component: [0x%X]: Event %s received", pAppData, omx_event_to_string(eEvent).c_str());
-
   OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
+  std::lock_guard<std::mutex> lock(component->state_mutex_);
+  Logger::trace("OMX Component: [0x%X]: Event %s received", pAppData, omx_event_to_string(eEvent).c_str());
 
   switch (eEvent)
   {
   case OMX_EventCmdComplete:
-    Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
+    //Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
     switch (Data1)
     {
     case OMX_CommandStateSet:
@@ -31,36 +31,47 @@ OMX_ERRORTYPE omx_event_handler(
       component->state_ = static_cast<OMX_STATETYPE>(Data2);
       break;
     case OMX_CommandFlush:
-    break;
+      break;
     case OMX_CommandPortDisable:
-    Logger::trace("OMX Component: [0x%X]: Port %d disabled", pAppData, Data2);
-    component->ports_[Data2]->set_enabled(false);
-    break;
+      Logger::trace("OMX Component: [0x%X]: Port %d disabled", pAppData, Data2);
+      break;
     case OMX_CommandPortEnable:
-    Logger::trace("OMX Component: [0x%X]: Port %d enabled", pAppData, Data2);
-    component->ports_[Data2]->set_enabled(true);
-    break;
+      Logger::trace("OMX Component: [0x%X]: Port %d enabled", pAppData, Data2);
+      break;
     case OMX_CommandMarkBuffer:
-    break;
+      break;
     default:
-    break;
+      break;
     }
+  default:
+    break;
   }
+  return OMX_ErrorNone;
+}
 
-  /*
-  Logger::trace("OMX Component: Event is %d", eEvent);
-  Logger::trace("OMX Component: Param1 is %d", Data1);
-  Logger::trace("OMX Component: Param2 is %d", Data2);
-  */
+OMX_ERRORTYPE omx_empty_buffer_done(
+    OMX_IN OMX_HANDLETYPE /*hComponent*/,
+    OMX_IN OMX_PTR pAppData,
+    OMX_IN OMX_BUFFERHEADERTYPE * pBuffer)
+{
+  Logger::warning("OMX Component: [0x%X]: Empty buffer done for 0x%X", pAppData, pBuffer);
+  return OMX_ErrorNone;
+}
 
+OMX_ERRORTYPE omx_fill_buffer_done(
+    OMX_IN OMX_HANDLETYPE /*hComponent*/,
+    OMX_IN OMX_PTR pAppData,
+    OMX_IN OMX_BUFFERHEADERTYPE * pBuffer)
+{
+  Logger::warning("OMX Component: [0x%X]: Fill buffer done for 0x%X", pAppData, pBuffer);
   return OMX_ErrorNone;
 }
 
 OMXComponent::OMXComponent(const std::string &component_sname)
 {
   OMX_CALLBACKTYPE callbacks = {.EventHandler = omx_event_handler,
-                                .EmptyBufferDone = nullptr,
-                                .FillBufferDone = nullptr};
+                                .EmptyBufferDone = omx_empty_buffer_done,
+                                .FillBufferDone = omx_fill_buffer_done};
 
   char component_name[128]{0};
   strcpy(component_name, component_sname.c_str());
@@ -122,16 +133,19 @@ void OMXComponent::print_state()
 
 void OMXComponent::change_state(OMX_STATETYPE new_state)
 {
-  required_state_ = new_state;
   Logger::debug("OMX Component: 0x%X changed request to: %s", this, omx_state_to_string(new_state).c_str());
   OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
+}
+
+void OMXComponent::wait_state(OMX_STATETYPE state)
+{
   uint32_t counter{0};
-  while (state_ != required_state_)
+  while (state_ != state)
   {
     if (counter++ >= STATE_CHANGE_TIME / WAIT_SLICE)
     {
-      Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(required_state_).c_str());
-      break;
+      Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(state).c_str());
+      return;
     }
     usleep(WAIT_SLICE);
   }
@@ -155,6 +169,9 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
 
 void OMXComponent::enable_ports(bool state, std::vector<OMX_U32> port_indexes)
 {
+  if (!state_mutex_.try_lock()) {
+    usleep(WAIT_SLICE);
+  }
   if (port_indexes.empty())
   {
     for (auto &port : ports_)
@@ -167,6 +184,7 @@ void OMXComponent::enable_ports(bool state, std::vector<OMX_U32> port_indexes)
       ports_[i]->enable(state);
     }
   }
+  state_mutex_.unlock();
 }
 
 void OMXComponent::allocate_buffers(std::vector<OMX_U32> port_indexes)
