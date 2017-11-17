@@ -24,6 +24,8 @@ public:
   void set_video_format(OMX_U32 port_index, OMX_VIDEO_CODINGTYPE codec) { ports_[port_index]->set_video_format(codec);}
   void wait_port_state(OMX_U32 port_index, bool state) { ports_[port_index]->wait_state(state);}
 
+  OMX_HANDLETYPE& handle() { return handle_; }
+
   friend OMX_ERRORTYPE omx_event_handler(OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     OMX_U32 Data1, OMX_U32 Data2, OMX_PTR pEventData);
 

@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <string>
+#include <thread>
 
 #include <unistd.h>
 
@@ -23,7 +24,7 @@ OMX_ERRORTYPE omx_event_handler(
   switch (eEvent)
   {
   case OMX_EventCmdComplete:
-    //Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
+    Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
     switch (Data1)
     {
     case OMX_CommandStateSet:
@@ -46,6 +47,7 @@ OMX_ERRORTYPE omx_event_handler(
   default:
     break;
   }
+  Logger::trace("Callback return");
   return OMX_ErrorNone;
 }
 
@@ -147,7 +149,8 @@ void OMXComponent::wait_state(OMX_STATETYPE state)
       Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(state).c_str());
       return;
     }
-    usleep(WAIT_SLICE);
+    //usleep(WAIT_SLICE);
+    std::this_thread::sleep_for(std::chrono::microseconds(WAIT_SLICE));
   }
 }
 
@@ -169,9 +172,6 @@ void OMXComponent::add_defined_ports(OMX_INDEXTYPE index_type)
 
 void OMXComponent::enable_ports(bool state, std::vector<OMX_U32> port_indexes)
 {
-  if (!state_mutex_.try_lock()) {
-    usleep(WAIT_SLICE);
-  }
   if (port_indexes.empty())
   {
     for (auto &port : ports_)
@@ -184,7 +184,6 @@ void OMXComponent::enable_ports(bool state, std::vector<OMX_U32> port_indexes)
       ports_[i]->enable(state);
     }
   }
-  state_mutex_.unlock();
 }
 
 void OMXComponent::allocate_buffers(std::vector<OMX_U32> port_indexes)

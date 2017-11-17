@@ -3,6 +3,7 @@
 
 #include "logger.h"
 #include "omx_component.h"
+#include "omx_support.h"
 #include "support_functions.h"
 
 OMXFacade::OMXFacade()
@@ -45,7 +46,7 @@ void OMXFacade::list_roles(char *name)
   }
 
   Logger::debug("OMX: Number of roles is: %d", roles_number);
-  
+
   if (roles_number > MAX_ROLES_NUMBER)
   {
     Logger::error("OMX: Too many roles to list");
@@ -70,7 +71,27 @@ void OMXFacade::list_roles(char *name)
   }
 }
 
-void OMXFacade::decode_file(const std::string& filename)
+OMX_ERRORTYPE read_into_buffer_and_empty(FILE *fp, OMXComponent component, OMX_BUFFERHEADERTYPE *buff_header, int *toread)
+{
+  int buff_size = buff_header->nAllocLen;
+  int nread = fread(buff_header->pBuffer, 1, buff_size, fp);
+  buff_header->nFilledLen = nread;
+  *toread -= nread;
+  Logger::trace("File: Read %d, %d still left", nread, *toread);
+  if (*toread <= 0)
+  {
+    Logger::trace("File: Setting EOS on input");
+    buff_header->nFlags |= OMX_BUFFERFLAG_EOS;
+  }
+  OMX_ERRORTYPE error = OMX_EmptyThisBuffer(component.handle(), buff_header);
+  if (error != OMX_ErrorNone)
+  {
+    Logger::error("File: Empty buffer error %s", omx_error_to_string(error).c_str());
+  }
+  return error;
+}
+
+void OMXFacade::decode_file(const std::string &filename)
 {
   get_file_size(filename);
   OMXComponent component("OMX.broadcom.video_decode");
@@ -87,5 +108,5 @@ void OMXFacade::decode_file(const std::string& filename)
   component.enable_ports(true, {130});
   component.allocate_buffers({130});
   component.wait_port_state(130, true);
-  sleep(10);
+  sleep(3);
 }
