@@ -99,14 +99,13 @@ void OMXFacade::decode_file(const std::string &filename)
   component.print_state();
   component.enable_ports(false);
   component.change_state(OMX_StateIdle);
+  component.set_video_format(130, OMX_VIDEO_CodingAVC);
+  component.enable_ports(true, {130});
+  component.allocate_buffers({130});  
   component.wait_state(OMX_StateIdle);
   component.print_state();
   component.change_state(OMX_StateExecuting);
   component.wait_state(OMX_StateExecuting);
   component.print_state();
-  component.set_video_format(130, OMX_VIDEO_CodingAVC);
-  component.enable_ports(true, {130});
-  component.allocate_buffers({130});
-  component.wait_port_state(130, true);
-  sleep(3);
+  sleep(1);
 }

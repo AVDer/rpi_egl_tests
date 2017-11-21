@@ -12,6 +12,6 @@ size_t get_file_size(const std::string& filename) {
     Logger::error("File: can't stat file %s", filename.c_str());
     return 0;
   }
-  Logger::info("File: File %s has size %d B", filename.c_str(), file_stat.st_size);
+  Logger::info("File: File %s has size %d bytes", filename.c_str(), file_stat.st_size);
   return file_stat.st_size;
 }

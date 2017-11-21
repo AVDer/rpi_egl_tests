@@ -19,35 +19,39 @@ OMX_ERRORTYPE omx_event_handler(
 {
   OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
   std::lock_guard<std::mutex> lock(component->state_mutex_);
-  Logger::trace("OMX Component: [0x%X]: Event %s received", pAppData, omx_event_to_string(eEvent).c_str());
+  Logger::trace("OMX Event callback: [0x%X]: Event %s received", pAppData, omx_event_to_string(eEvent).c_str());
 
   switch (eEvent)
   {
   case OMX_EventCmdComplete:
-    Logger::trace("OMX Component: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
+    Logger::trace("OMX Event callback: Command: %s", omx_command_to_string(static_cast<OMX_COMMANDTYPE>(Data1)).c_str());
     switch (Data1)
     {
     case OMX_CommandStateSet:
-      Logger::debug("OMX Component: [0x%X]: State changed to: %s", pAppData, omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
+      Logger::debug("OMX Event callback: [0x%X]: State changed to: %s", pAppData, omx_state_to_string(static_cast<OMX_STATETYPE>(Data2)).c_str());
       component->state_ = static_cast<OMX_STATETYPE>(Data2);
       break;
     case OMX_CommandFlush:
       break;
     case OMX_CommandPortDisable:
-      Logger::trace("OMX Component: [0x%X]: Port %d disabled", pAppData, Data2);
+      Logger::trace("OMX Event callback: [0x%X]: Port %d disabled", pAppData, Data2);
       break;
     case OMX_CommandPortEnable:
-      Logger::trace("OMX Component: [0x%X]: Port %d enabled", pAppData, Data2);
+      Logger::trace("OMX Event callback: [0x%X]: Port %d enabled", pAppData, Data2);
       break;
     case OMX_CommandMarkBuffer:
       break;
     default:
       break;
     }
+    break;
+  case OMX_EventError:
+    Logger::error("OMX Event callback: Error: %s", omx_error_to_string(static_cast<OMX_ERRORTYPE>(Data1)).c_str());
+    break;
   default:
     break;
   }
-  Logger::trace("Callback return");
+  Logger::trace("OMX Event callback: Callback return");
   return OMX_ErrorNone;
 }
 
@@ -56,7 +60,7 @@ OMX_ERRORTYPE omx_empty_buffer_done(
     OMX_IN OMX_PTR pAppData,
     OMX_IN OMX_BUFFERHEADERTYPE * pBuffer)
 {
-  Logger::warning("OMX Component: [0x%X]: Empty buffer done for 0x%X", pAppData, pBuffer);
+  Logger::warning("OMX Empty callback: [0x%X]: Empty buffer done for 0x%X", pAppData, pBuffer);
   return OMX_ErrorNone;
 }
 
@@ -65,7 +69,7 @@ OMX_ERRORTYPE omx_fill_buffer_done(
     OMX_IN OMX_PTR pAppData,
     OMX_IN OMX_BUFFERHEADERTYPE * pBuffer)
 {
-  Logger::warning("OMX Component: [0x%X]: Fill buffer done for 0x%X", pAppData, pBuffer);
+  Logger::warning("OMX Fill callback: [0x%X]: Fill buffer done for 0x%X", pAppData, pBuffer);
   return OMX_ErrorNone;
 }
 
@@ -135,8 +139,12 @@ void OMXComponent::print_state()
 
 void OMXComponent::change_state(OMX_STATETYPE new_state)
 {
-  Logger::debug("OMX Component: 0x%X changed request to: %s", this, omx_state_to_string(new_state).c_str());
-  OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
+  OMX_ERRORTYPE error = OMX_SendCommand(handle_, OMX_CommandStateSet, new_state, NULL);
+  if (error != OMX_ErrorNone) {
+    Logger::error("OMX Component: [0x%X] can't request state change to: %s: %s", this, omx_state_to_string(new_state).c_str(), omx_error_to_string(error).c_str());
+  } else {
+    Logger::debug("OMX Component: [0x%X] change request to: %s", this, omx_state_to_string(new_state).c_str());
+  }
 }
 
 void OMXComponent::wait_state(OMX_STATETYPE state)

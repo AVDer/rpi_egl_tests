@@ -1,6 +1,8 @@
 #ifndef RPI3_OMX_PORT_H
 #define RPI3_OMX_PORT_H
 
+#include <vector>
+
 #include <IL/OMX_Core.h>
 #include <IL/OMX_Component.h>
 
@@ -22,8 +24,8 @@ private:
 
 
   OMX_PARAM_PORTDEFINITIONTYPE port_definition_;
-  OMX_BUFFERHEADERTYPE* buffer_header_;
-  uint8_t* buffer_ = nullptr;
+  std::vector<OMX_BUFFERHEADERTYPE*> buffer_headers_;
+  std::vector<uint8_t*> buffers_;
   
   const OMX_HANDLETYPE& handle_;
 };
