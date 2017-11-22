@@ -1,6 +1,7 @@
 
 #include "omx_facade.h"
 
+#include "decode_functions.h"
 #include "logger.h"
 #include "omx_component.h"
 #include "omx_support.h"
@@ -71,41 +72,45 @@ void OMXFacade::list_roles(char *name)
   }
 }
 
-OMX_ERRORTYPE read_into_buffer_and_empty(FILE *fp, OMXComponent component, OMX_BUFFERHEADERTYPE *buff_header, int *toread)
-{
-  int buff_size = buff_header->nAllocLen;
-  int nread = fread(buff_header->pBuffer, 1, buff_size, fp);
-  buff_header->nFilledLen = nread;
-  *toread -= nread;
-  Logger::trace("File: Read %d, %d still left", nread, *toread);
-  if (*toread <= 0)
-  {
-    Logger::trace("File: Setting EOS on input");
-    buff_header->nFlags |= OMX_BUFFERFLAG_EOS;
-  }
-  OMX_ERRORTYPE error = OMX_EmptyThisBuffer(component.handle(), buff_header);
-  if (error != OMX_ErrorNone)
-  {
-    Logger::error("File: Empty buffer error %s", omx_error_to_string(error).c_str());
-  }
-  return error;
-}
-
 void OMXFacade::decode_file(const std::string &filename)
 {
-  get_file_size(filename);
-  OMXComponent component("OMX.broadcom.video_decode");
-  component.setup_ports();
-  component.print_state();
-  component.enable_ports(false);
-  component.change_state(OMX_StateIdle);
-  component.set_video_format(130, OMX_VIDEO_CodingAVC);
-  component.enable_ports(true, {130});
-  component.allocate_buffers({130});  
-  component.wait_state(OMX_StateIdle);
-  component.print_state();
-  component.change_state(OMX_StateExecuting);
-  component.wait_state(OMX_StateExecuting);
-  component.print_state();
+  OMXComponent decode_component("OMX.broadcom.video_decode");
+  decode_component.setup_ports();
+  decode_component.print_state();
+  decode_component.enable_ports(false);
+  decode_component.set_video_format(130, OMX_VIDEO_CodingAVC);
+  decode_component.enable_ports(true, {130});
+  decode_component.change_state(OMX_StateIdle);
+  decode_component.allocate_buffers({130});
+  decode_component.wait_state(OMX_StateIdle);
+  decode_component.print_state();
   sleep(1);
+  decode_component.change_state(OMX_StateExecuting);
+  decode_component.wait_state(OMX_StateExecuting);
+  decode_component.print_state();
+
+  sleep(1);
+
+  FILE *input_file = fopen(filename.c_str(), "r");
+  int32_t to_read = get_file_size(filename);
+  OMX_BUFFERHEADERTYPE *buff_header = decode_component.buffer_header(130);
+
+
+  // Read the first block so that the component can get
+// the dimensions of the video and call port settings
+// changed on the output port to configure it
+  bool port_settings_changed {0};
+  while (!port_settings_changed) {
+    read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
+    // If all the file has been read in, then
+    // we have to re-read this first block.
+    // Broadcom bug?
+    if (to_read <= 0) {
+      Logger::trace("Decode: Rewinding");
+      // wind back to start and repeat
+      input_file = freopen(filename.c_str(), "r", input_file);
+      to_read = get_file_size(filename);
+    }
+    sleep(1);
+  }
 }

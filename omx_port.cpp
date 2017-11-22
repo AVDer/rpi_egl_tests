@@ -68,7 +68,7 @@ void OMXPort::allocate_buffer()
   {
     buffers_[i] = new uint8_t[port_definition_.nBufferSize];
     OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffers_[i]);
-    //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_headers_, port_definition_.nPortIndex, this, port_definition_.nBufferSize);
+    //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, this, port_definition_.nBufferSize);
     if (error != OMX_ErrorNone)
     {
       Logger::error("OMX Port: Port %d buffer allocation failed: %s", port_definition_.nPortIndex, omx_error_to_string(error).c_str());

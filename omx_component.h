@@ -23,6 +23,9 @@ public:
   void allocate_buffers(std::vector<OMX_U32> port_indexes = {});
   void set_video_format(OMX_U32 port_index, OMX_VIDEO_CODINGTYPE codec) { ports_[port_index]->set_video_format(codec);}
   void wait_port_state(OMX_U32 port_index, bool state) { ports_[port_index]->wait_state(state);}
+  OMX_BUFFERHEADERTYPE* buffer_header(OMX_U32 port_index, OMX_U32 buffer_index = 0) {
+    return ports_[port_index]->buffer_header(buffer_index);
+  }
 
   OMX_HANDLETYPE& handle() { return handle_; }
 

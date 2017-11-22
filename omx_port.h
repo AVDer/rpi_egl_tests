@@ -16,6 +16,7 @@ public:
   void allocate_buffer();
   void set_video_format(OMX_VIDEO_CODINGTYPE codec);
   void wait_state(bool state);
+  OMX_BUFFERHEADERTYPE* buffer_header(OMX_U32 buffer_index) { return buffer_headers_[buffer_index]; }
 
 private:
 
