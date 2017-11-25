@@ -15,6 +15,14 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
   port_definition_.nVersion.nVersion = OMX_VERSION;
   port_definition_.nPortIndex = port_index;
   get_definition();
+  /*
+  port_definition_.nBufferCountActual = 1;
+  if (OMX_SetParameter(handle_, OMX_IndexParamPortDefinition, &port_definition_) != OMX_ErrorNone)
+  {
+    Logger::error("OMX Port: %d: Failed to set definition", port_definition_.nPortIndex);
+  }
+  get_definition();
+  */
   buffers_.resize(port_definition_.nBufferCountActual);
   buffer_headers_.resize(port_definition_.nBufferCountActual);
 }
@@ -64,10 +72,11 @@ void OMXPort::wait_state(bool state)
 
 void OMXPort::allocate_buffer()
 {
+  get_definition();
   for (OMX_U32 i {0}; i < port_definition_.nBufferCountActual; ++i)
   {
     buffers_[i] = new uint8_t[port_definition_.nBufferSize];
-    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffers_[i]);
+    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffer_headers_[i]), port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffers_[i]);
     //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, this, port_definition_.nBufferSize);
     if (error != OMX_ErrorNone)
     {
@@ -164,3 +173,18 @@ void OMXPort::get_definition()
     Logger::error("OMX Port: %d: Failed to get definition", port_definition_.nPortIndex);
   }
 }
+
+OMX_VIDEO_PARAM_PORTFORMATTYPE OMXPort::video_port_format() {
+  OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format;
+  OMX_INIT_STRUCTURE(video_port_format);
+  video_port_format.nPortIndex = port_definition_.nPortIndex;
+  /*OMX_ERRORTYPE err = */OMX_GetParameter(handle_, OMX_IndexParamVideoPortFormat, &video_port_format);
+  return video_port_format;
+}
+
+void OMXPort::set_video_port_format(OMX_VIDEO_PARAM_PORTFORMATTYPE port_format) {
+    if (OMX_SetParameter(handle_, OMX_IndexParamVideoPortFormat, &port_format) != OMX_ErrorNone)
+    {
+      Logger::error("OMX Port: %d: Failed to set port video format", port_definition_.nPortIndex);
+    }
+  }

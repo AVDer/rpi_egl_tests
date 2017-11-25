@@ -11,7 +11,6 @@
 OMX_ERRORTYPE read_into_buffer_and_empty(FILE *fp, OMXComponent& component, OMX_BUFFERHEADERTYPE *buff_header, int32_t *toread)
 {
   OMX_U32 buff_size = buff_header->nAllocLen;
-  //OMX_U32 buff_size = 1;
   size_t nread = fread(buff_header->pBuffer, 1, buff_size, fp);
   buff_header->nFilledLen = nread;
   *toread -= nread;

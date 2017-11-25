@@ -17,6 +17,8 @@ public:
   void set_video_format(OMX_VIDEO_CODINGTYPE codec);
   void wait_state(bool state);
   OMX_BUFFERHEADERTYPE* buffer_header(OMX_U32 buffer_index) { return buffer_headers_[buffer_index]; }
+  OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format();
+  void set_video_port_format(OMX_VIDEO_PARAM_PORTFORMATTYPE port_format);
 
 private:
 

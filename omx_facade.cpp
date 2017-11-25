@@ -1,4 +1,3 @@
-
 #include "omx_facade.h"
 
 #include "decode_functions.h"
@@ -78,39 +77,34 @@ void OMXFacade::decode_file(const std::string &filename)
   decode_component.setup_ports();
   decode_component.print_state();
   decode_component.enable_ports(false);
+  decode_component.change_state(OMX_StateIdle);
   decode_component.set_video_format(130, OMX_VIDEO_CodingAVC);
   decode_component.enable_ports(true, {130});
-  decode_component.change_state(OMX_StateIdle);
   decode_component.allocate_buffers({130});
   decode_component.wait_state(OMX_StateIdle);
   decode_component.print_state();
-  sleep(1);
   decode_component.change_state(OMX_StateExecuting);
   decode_component.wait_state(OMX_StateExecuting);
   decode_component.print_state();
 
-  sleep(1);
-
   FILE *input_file = fopen(filename.c_str(), "r");
   int32_t to_read = get_file_size(filename);
-  OMX_BUFFERHEADERTYPE *buff_header = decode_component.buffer_header(130);
-
+  OMX_BUFFERHEADERTYPE *buff_header;
 
   // Read the first block so that the component can get
 // the dimensions of the video and call port settings
 // changed on the output port to configure it
   bool port_settings_changed {0};
+  OMX_U32 buffer_index {0};
   while (!port_settings_changed) {
+    buff_header = decode_component.buffer_header(130, buffer_index%20);buffer_index++;
     read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
-    // If all the file has been read in, then
-    // we have to re-read this first block.
-    // Broadcom bug?
+    // If all the file has been read in, then we have to re-read this first block.
     if (to_read <= 0) {
-      Logger::trace("Decode: Rewinding");
-      // wind back to start and repeat
       input_file = freopen(filename.c_str(), "r", input_file);
       to_read = get_file_size(filename);
     }
-    sleep(1);
+    usleep(500000);
   }
+
 }

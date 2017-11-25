@@ -17,9 +17,9 @@ int main(int /*argc*/, char ** /*argv*/)
   Logger::set_logging_level(Logger::LoggingLevel::LoggingTrace);
   Logger::trace("General: Main thread started");
 
-  EGLHandler egl_handler;
-  egl_handler.init();
-  egl_handler.egl_from_dispmanx();
+  //EGLHandler egl_handler;
+  //egl_handler.init();
+  //egl_handler.egl_from_dispmanx();
 
 static const GLfloat BOX_SIZE {0.7f};
 
