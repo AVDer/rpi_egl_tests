@@ -6,6 +6,10 @@
 #include <IL/OMX_Core.h>
 #include <IL/OMX_Component.h>
 
+enum PortFlag : uint32_t {
+  changed
+};
+
 class OMXPort {
 public:
   OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE& handle);
@@ -19,12 +23,15 @@ public:
   OMX_BUFFERHEADERTYPE* buffer_header(OMX_U32 buffer_index) { return buffer_headers_[buffer_index]; }
   OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format();
   void set_video_port_format(OMX_VIDEO_PARAM_PORTFORMATTYPE port_format);
+  void set_flag(PortFlag flag, bool state = true);
+  bool get_flag(PortFlag flag);
+
+  void print_video_settings();
 
 private:
-
   void get_supported_video_formats();
   void get_definition();
-
+  uint32_t flags_;
 
   OMX_PARAM_PORTDEFINITIONTYPE port_definition_;
   std::vector<OMX_BUFFERHEADERTYPE*> buffer_headers_;

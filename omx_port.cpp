@@ -29,7 +29,8 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
 
 OMXPort::~OMXPort()
 {
-  for (auto buffer: buffers_) {
+  for (auto buffer : buffers_)
+  {
     if (buffer)
     {
       delete[] buffer;
@@ -73,7 +74,7 @@ void OMXPort::wait_state(bool state)
 void OMXPort::allocate_buffer()
 {
   get_definition();
-  for (OMX_U32 i {0}; i < port_definition_.nBufferCountActual; ++i)
+  for (OMX_U32 i{0}; i < port_definition_.nBufferCountActual; ++i)
   {
     buffers_[i] = new uint8_t[port_definition_.nBufferSize];
     OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffer_headers_[i]), port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffers_[i]);
@@ -85,7 +86,7 @@ void OMXPort::allocate_buffer()
     }
   }
   Logger::trace("OMX Port: Port %d: %d x buffer(s) for %d bytes allocated.", port_definition_.nPortIndex,
-  port_definition_.nBufferCountActual, port_definition_.nBufferSize);
+                port_definition_.nBufferCountActual, port_definition_.nBufferSize);
 }
 
 void OMXPort::set_video_format(OMX_VIDEO_CODINGTYPE codec)
@@ -174,17 +175,49 @@ void OMXPort::get_definition()
   }
 }
 
-OMX_VIDEO_PARAM_PORTFORMATTYPE OMXPort::video_port_format() {
+OMX_VIDEO_PARAM_PORTFORMATTYPE OMXPort::video_port_format()
+{
   OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format;
   OMX_INIT_STRUCTURE(video_port_format);
   video_port_format.nPortIndex = port_definition_.nPortIndex;
-  /*OMX_ERRORTYPE err = */OMX_GetParameter(handle_, OMX_IndexParamVideoPortFormat, &video_port_format);
+  /*OMX_ERRORTYPE err = */ OMX_GetParameter(handle_, OMX_IndexParamVideoPortFormat, &video_port_format);
   return video_port_format;
 }
 
-void OMXPort::set_video_port_format(OMX_VIDEO_PARAM_PORTFORMATTYPE port_format) {
-    if (OMX_SetParameter(handle_, OMX_IndexParamVideoPortFormat, &port_format) != OMX_ErrorNone)
-    {
-      Logger::error("OMX Port: %d: Failed to set port video format", port_definition_.nPortIndex);
-    }
+void OMXPort::set_video_port_format(OMX_VIDEO_PARAM_PORTFORMATTYPE port_format)
+{
+  if (OMX_SetParameter(handle_, OMX_IndexParamVideoPortFormat, &port_format) != OMX_ErrorNone)
+  {
+    Logger::error("OMX Port: %d: Failed to set port video format", port_definition_.nPortIndex);
   }
+}
+
+void OMXPort::set_flag(PortFlag flag, bool state)
+{
+  if (state)
+  {
+    flags_ |= (1 << flag);
+  }
+  else
+  {
+    flags_ &= ~(1 << flag);
+  }
+}
+
+bool OMXPort::get_flag(PortFlag flag)
+{
+  return flags_ & (1 << flag);
+}
+
+void OMXPort::print_video_settings()
+{
+  OMX_U32 width = port_definition_.format.video.nFrameWidth;
+  OMX_U32 height = port_definition_.format.video.nFrameHeight;
+  OMX_S32 stride = port_definition_.format.video.nStride;
+  OMX_U32 slice_height = port_definition_.format.video.nSliceHeight;
+  Logger::info("OMX Port: %d: Frame width %d, frame height %d, stride %d, slice height %d",
+               port_definition_.nPortIndex, width, height, stride, slice_height);
+  Logger::info("OMX Port: %d: Compression: %s, color format: %s", port_definition_.nPortIndex,
+               omx_vcodec_to_string(port_definition_.format.video.eCompressionFormat).c_str(),
+               omx_color_format_to_string(port_definition_.format.video.eColorFormat).c_str());
+}

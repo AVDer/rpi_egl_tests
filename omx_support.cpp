@@ -147,6 +147,8 @@ const std::string omx_event_to_string(OMX_EVENTTYPE event)
     return "OMX_EventBufferFlag";
   case OMX_EventResourcesAcquired:
     return "OMX_EventResourcesAcquired";
+  default:
+    return "Unknown event";
   }
 }
 
@@ -164,5 +166,96 @@ const std::string omx_command_to_string(OMX_COMMANDTYPE command)
     return "OMX_CommandPortEnable";
   case OMX_CommandMarkBuffer:
     return "OMX_CommandMarkBuffer";
+  default:
+    return "Unknown command";
+  }
+}
+
+const std::string omx_color_format_to_string(OMX_COLOR_FORMATTYPE format)
+{
+  switch (format)
+  {
+  case OMX_COLOR_FormatUnused:
+    return "OMX_COLOR_FormatUnused";
+  case OMX_COLOR_FormatMonochrome:
+    return "OMX_COLOR_FormatMonochrome";
+  case OMX_COLOR_Format8bitRGB332:
+    return "OMX_COLOR_Format8bitRGB332";
+  case OMX_COLOR_Format12bitRGB444:
+    return "OMX_COLOR_Format12bitRGB444";
+  case OMX_COLOR_Format16bitARGB4444:
+    return "OMX_COLOR_Format16bitARGB4444";
+  case OMX_COLOR_Format16bitARGB1555:
+    return "OMX_COLOR_Format16bitARGB1555";
+  case OMX_COLOR_Format16bitRGB565:
+    return "OMX_COLOR_Format16bitRGB565";
+  case OMX_COLOR_Format16bitBGR565:
+    return "OMX_COLOR_Format16bitBGR565";
+  case OMX_COLOR_Format18bitRGB666:
+    return "OMX_COLOR_Format18bitRGB666";
+  case OMX_COLOR_Format18bitARGB1665:
+    return "OMX_COLOR_Format18bitARGB1665";
+  case OMX_COLOR_Format19bitARGB1666:
+    return "OMX_COLOR_Format19bitARGB1666";
+  case OMX_COLOR_Format24bitRGB888:
+    return "OMX_COLOR_Format24bitRGB888";
+  case OMX_COLOR_Format24bitBGR888:
+    return "OMX_COLOR_Format24bitBGR888";
+  case OMX_COLOR_Format24bitARGB1887:
+    return "OMX_COLOR_Format24bitARGB1887";
+  case OMX_COLOR_Format25bitARGB1888:
+    return "OMX_COLOR_Format25bitARGB1888";
+  case OMX_COLOR_Format32bitBGRA8888:
+    return "OMX_COLOR_Format32bitBGRA8888";
+  case OMX_COLOR_Format32bitARGB8888:
+    return "OMX_COLOR_Format32bitARGB8888";
+  case OMX_COLOR_FormatYUV411Planar:
+    return "OMX_COLOR_FormatYUV411Planar";
+  case OMX_COLOR_FormatYUV411PackedPlanar:
+    return "OMX_COLOR_FormatYUV411PackedPlanar";
+  case OMX_COLOR_FormatYUV420Planar:
+    return "OMX_COLOR_FormatYUV420Planar";
+  case OMX_COLOR_FormatYUV420PackedPlanar:
+    return "OMX_COLOR_FormatYUV420PackedPlanar";
+  case OMX_COLOR_FormatYUV420SemiPlanar:
+    return "OMX_COLOR_FormatYUV420SemiPlanar";
+  case OMX_COLOR_FormatYUV422Planar:
+    return "OMX_COLOR_FormatYUV422Planar";
+  case OMX_COLOR_FormatYUV422PackedPlanar:
+    return "OMX_COLOR_FormatYUV422PackedPlanar";
+  case OMX_COLOR_FormatYUV422SemiPlanar:
+    return "OMX_COLOR_FormatYUV422SemiPlanar";
+  case OMX_COLOR_FormatYCbYCr:
+    return "OMX_COLOR_FormatYCbYCr";
+  case OMX_COLOR_FormatYCrYCb:
+    return "OMX_COLOR_FormatYCrYCb";
+  case OMX_COLOR_FormatCbYCrY:
+    return "OMX_COLOR_FormatCbYCrY";
+  case OMX_COLOR_FormatCrYCbY:
+    return "OMX_COLOR_FormatCrYCbY";
+  case OMX_COLOR_FormatYUV444Interleaved:
+    return "OMX_COLOR_FormatYUV444Interleaved";
+  case OMX_COLOR_FormatRawBayer8bit:
+    return "OMX_COLOR_FormatRawBayer8bit";
+  case OMX_COLOR_FormatRawBayer10bit:
+    return "OMX_COLOR_FormatRawBayer10bit";
+  case OMX_COLOR_FormatRawBayer8bitcompressed:
+    return "OMX_COLOR_FormatRawBayer8bitcompressed";
+  case OMX_COLOR_FormatL2:
+    return "OMX_COLOR_FormatL2";
+  case OMX_COLOR_FormatL4:
+    return "OMX_COLOR_FormatL4";
+  case OMX_COLOR_FormatL8:
+    return "OMX_COLOR_FormatL8";
+  case OMX_COLOR_FormatL16:
+    return "OMX_COLOR_FormatL16";
+  case OMX_COLOR_FormatL24:
+    return "OMX_COLOR_FormatL24";
+  case OMX_COLOR_FormatL32:
+    return "OMX_COLOR_FormatL32";
+  case OMX_COLOR_FormatMax:
+    return "OMX_COLOR_FormatMax";
+  default:
+    return "Unknown color format";
   }
 }

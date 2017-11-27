@@ -25,5 +25,6 @@ const std::string omx_state_to_string(OMX_STATETYPE state);
 const std::string omx_vcodec_to_string(OMX_VIDEO_CODINGTYPE codec);
 const std::string omx_event_to_string(OMX_EVENTTYPE event);
 const std::string omx_command_to_string(OMX_COMMANDTYPE command);
+const std::string omx_color_format_to_string(OMX_COLOR_FORMATTYPE format);
 
 #endif

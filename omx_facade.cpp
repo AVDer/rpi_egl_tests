@@ -78,7 +78,7 @@ void OMXFacade::decode_file(const std::string &filename)
   decode_component.print_state();
   decode_component.enable_ports(false);
   decode_component.change_state(OMX_StateIdle);
-  decode_component.set_video_format(130, OMX_VIDEO_CodingAVC);
+  decode_component.port(130)->set_video_format(OMX_VIDEO_CodingAVC);
   decode_component.enable_ports(true, {130});
   decode_component.allocate_buffers({130});
   decode_component.wait_state(OMX_StateIdle);
@@ -87,24 +87,26 @@ void OMXFacade::decode_file(const std::string &filename)
   decode_component.wait_state(OMX_StateExecuting);
   decode_component.print_state();
 
+  decode_component.port(131)->print_video_settings();
+
   FILE *input_file = fopen(filename.c_str(), "r");
   int32_t to_read = get_file_size(filename);
   OMX_BUFFERHEADERTYPE *buff_header;
 
-  // Read the first block so that the component can get
-// the dimensions of the video and call port settings
-// changed on the output port to configure it
-  bool port_settings_changed {0};
+  decode_component.port(131)->set_flag(PortFlag::changed, false);
   OMX_U32 buffer_index {0};
-  while (!port_settings_changed) {
-    buff_header = decode_component.buffer_header(130, buffer_index%20);buffer_index++;
+  while (!decode_component.port(131)->get_flag(PortFlag::changed)) {
+    buff_header = decode_component.port(130)->buffer_header(buffer_index%20);
+    buffer_index++;
     read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
     // If all the file has been read in, then we have to re-read this first block.
     if (to_read <= 0) {
       input_file = freopen(filename.c_str(), "r", input_file);
       to_read = get_file_size(filename);
     }
-    usleep(500000);
   }
+
+  sleep(3);
+  decode_component.port(131)->print_video_settings();
 
 }

@@ -47,6 +47,7 @@ OMX_ERRORTYPE omx_event_handler(
     break;
   case OMX_EventPortSettingsChanged:
     Logger::trace("OMX Event callback: Port %d changed state", nData1);
+    component->port(nData1)->set_flag(PortFlag::changed);
     break;
   case OMX_EventError:
     Logger::error("OMX Event callback: Error: %s", omx_error_to_string(static_cast<OMX_ERRORTYPE>(nData1)).c_str());
@@ -211,4 +212,8 @@ void OMXComponent::allocate_buffers(std::vector<OMX_U32> port_indexes)
       ports_[i]->allocate_buffer();
     }
   }
+}
+
+std::shared_ptr<OMXPort> OMXComponent::port(OMX_U32 port_index) {
+  return ports_[port_index];
 }
