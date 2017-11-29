@@ -25,6 +25,9 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
   */
   buffers_.resize(port_definition_.nBufferCountActual);
   buffer_headers_.resize(port_definition_.nBufferCountActual);
+  ready_.resize(port_definition_.nBufferCountActual);
+  for (OMX_U32 i {0}; i < port_definition_.nBufferCountActual; ++i) ready_[i] = true;
+  buffer_addresses_.resize(port_definition_.nBufferCountActual);
 }
 
 OMXPort::~OMXPort()
@@ -66,7 +69,7 @@ void OMXPort::wait_state(bool state)
       Logger::warning("OMX Port: Port %d can't change state to %d", port_definition_.nPortIndex, state);
       return;
     }
-    usleep(WAIT_SLICE);
+    std::this_thread::sleep_for(std::chrono::microseconds(WAIT_SLICE));
   }
   Logger::trace("OMX Port: Port %d changed state to %d", port_definition_.nPortIndex, state);
 }
@@ -77,7 +80,8 @@ void OMXPort::allocate_buffer()
   for (OMX_U32 i{0}; i < port_definition_.nBufferCountActual; ++i)
   {
     buffers_[i] = new uint8_t[port_definition_.nBufferSize];
-    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffer_headers_[i]), port_definition_.nPortIndex, nullptr, port_definition_.nBufferSize, buffers_[i]);
+    buffer_addresses_[i] = std::make_pair(port_definition_.nPortIndex, i);
+    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffer_headers_[i]), port_definition_.nPortIndex, &(buffer_addresses_[i]), port_definition_.nBufferSize, buffers_[i]);
     //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, this, port_definition_.nBufferSize);
     if (error != OMX_ErrorNone)
     {
@@ -87,6 +91,21 @@ void OMXPort::allocate_buffer()
   }
   Logger::trace("OMX Port: Port %d: %d x buffer(s) for %d bytes allocated.", port_definition_.nPortIndex,
                 port_definition_.nBufferCountActual, port_definition_.nBufferSize);
+}
+
+OMX_BUFFERHEADERTYPE* OMXPort::get_buffer(bool blocking/* = true*/) {
+  OMX_U32 index {0};
+  while (true) {
+    if (ready_[index]) {
+      ready_[index] = false;
+      Logger::verbose("OMX Port: Port %d buffer %d used", port_definition_.nPortIndex, index);
+      return buffer_headers_[index];
+    }
+    if (++index >= port_definition_.nBufferCountActual) {
+      if (blocking == false) return nullptr;
+      index = 0;
+    }
+  }
 }
 
 void OMXPort::set_video_format(OMX_VIDEO_CODINGTYPE codec)
@@ -211,6 +230,7 @@ bool OMXPort::get_flag(PortFlag flag)
 
 void OMXPort::print_video_settings()
 {
+  get_definition();
   OMX_U32 width = port_definition_.format.video.nFrameWidth;
   OMX_U32 height = port_definition_.format.video.nFrameHeight;
   OMX_S32 stride = port_definition_.format.video.nStride;

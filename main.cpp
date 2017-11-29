@@ -14,7 +14,7 @@
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-  Logger::set_logging_level(Logger::LoggingLevel::LoggingTrace);
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingVerbose);
   Logger::trace("General: Main thread started");
 
   //EGLHandler egl_handler;

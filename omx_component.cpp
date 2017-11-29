@@ -64,7 +64,10 @@ OMX_ERRORTYPE omx_empty_buffer_done(
     OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
 {
-  Logger::warning("OMX Empty callback: [0x%X]: Empty buffer done for 0x%X", pAppData, pBuffer);
+  OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
+  buffer_address_t* buffer_address = reinterpret_cast<buffer_address_t*>(pBuffer->pAppPrivate);
+  Logger::verbose("OMX Empty buffer: [0x%X]: Port: %d, buffer index: %d", pAppData, buffer_address->first, buffer_address->second);
+  component->port(buffer_address->first)->set_buffer_ready(buffer_address->second, true);
   return OMX_ErrorNone;
 }
 
@@ -73,7 +76,10 @@ OMX_ERRORTYPE omx_fill_buffer_done(
     OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
 {
-  Logger::warning("OMX Fill callback: [0x%X]: Fill buffer done for 0x%X", pAppData, pBuffer);
+  OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
+  buffer_address_t* buffer_address = reinterpret_cast<buffer_address_t*>(pBuffer->pAppPrivate);
+  Logger::verbose("OMX Fill buffer: [0x%X]: Port: %d, buffer index: %d", pAppData, buffer_address->first, buffer_address->second);
+  component->port(buffer_address->first)->set_buffer_ready(buffer_address->second, true);
   return OMX_ErrorNone;
 }
 
@@ -161,7 +167,6 @@ void OMXComponent::wait_state(OMX_STATETYPE state)
       Logger::warning("OMX Component: [0x%X] can't change state to %s", this, omx_state_to_string(state).c_str());
       return;
     }
-    //usleep(WAIT_SLICE);
     std::this_thread::sleep_for(std::chrono::microseconds(WAIT_SLICE));
   }
 }

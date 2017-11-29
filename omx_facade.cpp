@@ -87,17 +87,14 @@ void OMXFacade::decode_file(const std::string &filename)
   decode_component.wait_state(OMX_StateExecuting);
   decode_component.print_state();
 
-  decode_component.port(131)->print_video_settings();
-
   FILE *input_file = fopen(filename.c_str(), "r");
   int32_t to_read = get_file_size(filename);
   OMX_BUFFERHEADERTYPE *buff_header;
 
   decode_component.port(131)->set_flag(PortFlag::changed, false);
-  OMX_U32 buffer_index {0};
-  while (!decode_component.port(131)->get_flag(PortFlag::changed)) {
-    buff_header = decode_component.port(130)->buffer_header(buffer_index%20);
-    buffer_index++;
+
+  while (!decode_component.port(131)->get_flag(PortFlag::changed)) { 
+    buff_header = decode_component.port(130)->get_buffer();
     read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
     // If all the file has been read in, then we have to re-read this first block.
     if (to_read <= 0) {
@@ -106,7 +103,22 @@ void OMXFacade::decode_file(const std::string &filename)
     }
   }
 
-  sleep(3);
   decode_component.port(131)->print_video_settings();
-
+  decode_component.enable_ports(true, {131});
+  decode_component.allocate_buffers({131});
+  // now work through the file
+  while (to_read > 0) {
+    // do we have an input buffer we can fill and empty?
+    buff_header = decode_component.port(130)->get_buffer(false);
+    if (buff_header != nullptr) {
+      read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
+    }
+    // do we have an output buffer that has been filled?
+    buff_header = decode_component.port(131)->get_buffer(false);
+    if (buff_header != nullptr) {
+      save_info_from_filled_buffer(decode_component, buff_header);
+    } else {
+      Logger::verbose("Decode: No filled buffer");
+    }
+  }
 }

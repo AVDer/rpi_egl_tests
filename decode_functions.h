@@ -14,16 +14,30 @@ OMX_ERRORTYPE read_into_buffer_and_empty(FILE *fp, OMXComponent& component, OMX_
   size_t nread = fread(buff_header->pBuffer, 1, buff_size, fp);
   buff_header->nFilledLen = nread;
   *toread -= nread;
-  Logger::trace("File: Read %d, %d still left", nread, *toread);
+  Logger::verbose("File: Read %d, %d still left", nread, *toread);
   if (*toread <= 0)
   {
-    Logger::trace("File: Setting EOS on input");
+    Logger::verbose("File: Setting EOS on input");
     buff_header->nFlags |= OMX_BUFFERFLAG_EOS;
   }
   OMX_ERRORTYPE error = OMX_EmptyThisBuffer(component.handle(), buff_header);
   if (error != OMX_ErrorNone)
   {
     Logger::error("File: Empty buffer error %s", omx_error_to_string(error).c_str());
+  }
+  return error;
+}
+
+OMX_ERRORTYPE save_info_from_filled_buffer(OMXComponent& component, OMX_BUFFERHEADERTYPE * buff_header) {
+  Logger::verbose("File: Got a filled buffer with %d, allocated %d", buff_header->nFilledLen, buff_header->nAllocLen);
+  if (buff_header->nFlags & OMX_BUFFERFLAG_EOS) {
+    Logger::verbose("File: Got EOS on output");
+    exit(0);
+  }
+  // and then refill it
+  OMX_ERRORTYPE error = OMX_FillThisBuffer(component.handle(), buff_header);
+  if (error != OMX_ErrorNone) {
+    Logger::error("File: Fill buffer error %s", omx_error_to_string(error).c_str());
   }
   return error;
 }

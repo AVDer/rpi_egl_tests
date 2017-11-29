@@ -20,7 +20,8 @@ class Logger {
 public:
 
   enum LoggingLevel {
-    LoggingTrace = 0,
+    LoggingVerbose = -1,
+    LoggingTrace,
     LoggingDebug,
     LoggingInfo,
     LoggingWarning,
@@ -80,6 +81,16 @@ public:
       print_time();
       printf("%s", KWHT);
       printf("Trace: "); printf(items...); printf("\n");
+      printf("%s", KNRM);
+    }
+  }
+
+  template<typename... I>
+  static void verbose(I... items) {
+    if (logging_level_ <= LoggingVerbose) {
+      print_time();
+      printf("%s", KWHT);
+      printf("Verb : "); printf(items...); printf("\n");
       printf("%s", KNRM);
     }
   }
