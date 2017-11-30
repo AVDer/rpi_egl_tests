@@ -15,6 +15,10 @@
 class OMXComponent {
 public:
   OMXComponent(const std::string& component_name);
+  OMXComponent(const OMXComponent&) = delete;
+
+  OMXComponent operator=(const OMXComponent&) = delete;
+
   void setup_ports(std::vector<OMX_U32> port_indexes = {});
   void print_state();
   void change_state(OMX_STATETYPE new_state);
@@ -33,12 +37,12 @@ private:
   void add_defined_ports(OMX_INDEXTYPE index_type);
 
   OMX_HANDLETYPE handle_ {nullptr};
-  OMX_STATETYPE state_;
-  OMX_STATETYPE required_state_;
+  OMX_STATETYPE state_ {OMX_StateInvalid};
+  OMX_STATETYPE required_state_ {OMX_StateInvalid};
 
   OMX_VERSIONTYPE spec_version_;
   OMX_VERSIONTYPE comp_version_;
-  OMX_UUIDTYPE uid_;
+  OMX_UUIDTYPE uid_ {0};
 
   std::map<OMX_U32, std::shared_ptr<OMXPort>> ports_;
   std::mutex state_mutex_;

@@ -180,8 +180,8 @@ void OMXPort::get_supported_video_formats()
       Logger::debug("OMX Port: No coding format returned");
       return;
     }
-    Logger::debug("OMX Port: Video format encoding %s; color format 0x%X",
-                  omx_vcodec_to_string(sVideoPortFormat.eCompressionFormat).c_str(), sVideoPortFormat.eColorFormat);
+    Logger::debug("OMX Port: Video format encoding %s; color format %s",
+                  omx_vcodec_to_string(sVideoPortFormat.eCompressionFormat).c_str(), omx_color_format_to_string(sVideoPortFormat.eColorFormat).c_str());
     sVideoPortFormat.nIndex++;
   }
 }

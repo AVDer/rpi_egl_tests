@@ -8,13 +8,15 @@
 #include "shader_program.h"
 #include "tga_file.h"
 
+/*
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+*/
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-  Logger::set_logging_level(Logger::LoggingLevel::LoggingVerbose);
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingDebug);
   Logger::trace("General: Main thread started");
 
   //EGLHandler egl_handler;
@@ -104,7 +106,7 @@ static const GLfloat BOX_SIZE {0.7f};
   }
 */
   OMXFacade omx_facade;
-  omx_facade.decode_file("test.h264");
+  omx_facade.render_file("test.h264");
 
   return 0;
 }
