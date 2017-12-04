@@ -12,6 +12,13 @@ enum PortFlag : uint32_t {
 
 using buffer_address_t = std::pair<OMX_U32, OMX_U32>;
 
+struct Buffer {
+  OMX_BUFFERHEADERTYPE* buffer_header {nullptr};
+  uint8_t* data {nullptr};
+  bool ready {true};
+  buffer_address_t  buffer_address {0, 0};
+};
+
 class OMXPort {
 public:
   OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE& handle);
@@ -21,7 +28,7 @@ public:
   bool enabled();
   void allocate_buffer();
   OMX_BUFFERHEADERTYPE* get_buffer(bool blocking = true);
-  void set_buffer_ready(OMX_U32 buffer_index, bool ready = true) { ready_[buffer_index] = ready; }
+  void set_buffer_ready(OMX_U32 buffer_index, bool ready = true) { buffers_[buffer_index].ready = ready; }
   void set_video_format(OMX_VIDEO_CODINGTYPE codec);
   void wait_state(bool state);
   OMX_VIDEO_PARAM_PORTFORMATTYPE video_port_format();
@@ -37,10 +44,7 @@ private:
   uint32_t flags_;
 
   OMX_PARAM_PORTDEFINITIONTYPE port_definition_;
-  std::vector<OMX_BUFFERHEADERTYPE*> buffer_headers_;
-  std::vector<uint8_t*> buffers_;
-  std::vector<bool> ready_;
-  std::vector<buffer_address_t> buffer_addresses_;
+  std::vector<Buffer> buffers_;
   
   const OMX_HANDLETYPE& handle_;
 };

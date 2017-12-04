@@ -8,20 +8,20 @@
 #include "shader_program.h"
 #include "tga_file.h"
 
-/*
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-*/
+
+void* video_decode(void* param);
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-  Logger::set_logging_level(Logger::LoggingLevel::LoggingDebug);
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingVerbose);
   Logger::trace("General: Main thread started");
 
-  //EGLHandler egl_handler;
-  //egl_handler.init();
-  //egl_handler.egl_from_dispmanx();
+  EGLHandler egl_handler;
+  egl_handler.init();
+  egl_handler.egl_from_dispmanx();
 
 static const GLfloat BOX_SIZE {0.7f};
 
@@ -37,7 +37,7 @@ static const GLfloat BOX_SIZE {0.7f};
       -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.0f,  0.0f,
 
     };
-/*
+
   GLubyte indecies[] = {
     //front
     0, 1, 2, 2, 3, 0,
@@ -52,8 +52,8 @@ static const GLfloat BOX_SIZE {0.7f};
     // down
     0, 4, 7, 7, 3, 0
   };
-*/
-/*
+
+
   glViewport(0, 0, egl_handler.screen_width(), egl_handler.screen_height());
 
   ShaderProgram shader_program;
@@ -67,10 +67,14 @@ static const GLfloat BOX_SIZE {0.7f};
   GLint mvp_location = glGetUniformLocation(shader_program.shader_id(), "u_mvp");
 
   // Load the texture
-  Texture textue(TGAFile("corsairs.tga"));
-  GLuint texture_id = textue.texture_id();
+  //Texture textue(TGAFile("corsairs.tga"));
+  Texture texture(egl_handler.state());
+  GLuint texture_id = texture.texture_id();
+  egl_image_t egl_image = texture.egl_image();
+  pthread_t omx_thread;
+  pthread_create(&omx_thread, nullptr, video_decode, egl_image);
 
-    for (auto i = 0; i < 10; ++i)
+  for (auto i = 0; i < 10; ++i)
   {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -102,11 +106,13 @@ static const GLfloat BOX_SIZE {0.7f};
     glFlush();
     eglSwapBuffers(egl_handler.state()->display, egl_handler.state()->surface);
 
-    usleep(100000);
+    sleep(1);
   }
-*/
-  OMXFacade omx_facade;
-  omx_facade.render_file("test.h264");
 
   return 0;
+}
+
+void* video_decode(void* param) {
+  OMXFacade omx_facade;
+  omx_facade.decode_to_egl("test.h264", reinterpret_cast<egl_image_t>(param));
 }

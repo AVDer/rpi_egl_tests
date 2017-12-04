@@ -80,6 +80,9 @@ OMX_ERRORTYPE omx_fill_buffer_done(
   buffer_address_t* buffer_address = reinterpret_cast<buffer_address_t*>(pBuffer->pAppPrivate);
   Logger::verbose("OMX Fill buffer: [0x%X]: Port: %d, buffer index: %d", pAppData, buffer_address->first, buffer_address->second);
   component->port(buffer_address->first)->set_buffer_ready(buffer_address->second, true);
+  if (component->fill_cb_function_) {
+    component->fill_cb_function_(nullptr);
+  }
   return OMX_ErrorNone;
 }
 

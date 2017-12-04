@@ -8,6 +8,24 @@
 #include "omx_component.h"
 #include "omx_support.h"
 
+class EGLWriter {
+public:
+  explicit EGLWriter(OMXComponent& component, OMX_BUFFERHEADERTYPE* buffer_header) :
+  component_(component),
+  buffer_header_(buffer_header)
+    {}
+  void operator()(OMX_BUFFERHEADERTYPE* buffer_header) {
+    Logger::warning("OMX-EGL: We're here!");
+    OMX_ERRORTYPE error = OMX_FillThisBuffer(component_.handle(), buffer_header_);
+    if (error != OMX_ErrorNone) {
+      Logger::error("OMX-EGL: OMX_FillThisBuffer failed in callback: %s", omx_error_to_string(error).c_str());
+    }
+  }
+private:
+  OMXComponent& component_;
+  OMX_BUFFERHEADERTYPE* buffer_header_;
+};
+
 OMX_ERRORTYPE read_into_buffer_and_empty(FILE *fp, OMXComponent& component, OMX_BUFFERHEADERTYPE *buff_header, int32_t *toread)
 {
   OMX_U32 buff_size = buff_header->nAllocLen;

@@ -10,6 +10,8 @@
 
 #include "omx_component.h"
 
+using egl_image_t = void*;
+
 class OMXFacade
 {
 public:
@@ -17,6 +19,7 @@ public:
   void list_components();
   void decode_file(const std::string& filename);
   void render_file(const std::string& filename);
+  void decode_to_egl(const std::string& filename, egl_image_t egl_image);
 
 private:
   static const uint32_t MAX_ROLES_NUMBER {32};

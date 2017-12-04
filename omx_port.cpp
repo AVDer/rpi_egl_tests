@@ -24,19 +24,15 @@ OMXPort::OMXPort(OMX_U32 port_index, const OMX_HANDLETYPE &handle) : handle_(han
   get_definition();
   */
   buffers_.resize(port_definition_.nBufferCountActual);
-  buffer_headers_.resize(port_definition_.nBufferCountActual);
-  ready_.resize(port_definition_.nBufferCountActual);
-  for (OMX_U32 i {0}; i < port_definition_.nBufferCountActual; ++i) ready_[i] = true;
-  buffer_addresses_.resize(port_definition_.nBufferCountActual);
 }
 
 OMXPort::~OMXPort()
 {
   for (auto buffer : buffers_)
   {
-    if (buffer)
+    if (buffer.data)
     {
-      delete[] buffer;
+      delete[] buffer.data;
     }
   }
 }
@@ -77,11 +73,15 @@ void OMXPort::wait_state(bool state)
 void OMXPort::allocate_buffer()
 {
   get_definition();
-  for (OMX_U32 i{0}; i < port_definition_.nBufferCountActual; ++i)
+  for (OMX_U32 i {0}; i < port_definition_.nBufferCountActual; ++i)
   {
-    buffers_[i] = new uint8_t[port_definition_.nBufferSize];
-    buffer_addresses_[i] = std::make_pair(port_definition_.nPortIndex, i);
-    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffer_headers_[i]), port_definition_.nPortIndex, &(buffer_addresses_[i]), port_definition_.nBufferSize, buffers_[i]);
+    buffers_[i].data = new uint8_t[port_definition_.nBufferSize];
+    buffers_[i].buffer_address = std::make_pair(port_definition_.nPortIndex, i);
+    OMX_ERRORTYPE error = OMX_UseBuffer(handle_, &(buffers_[i].buffer_header),
+      port_definition_.nPortIndex,
+      &(buffers_[i].buffer_address),
+      port_definition_.nBufferSize,
+      buffers_[i].data);
     //OMX_ERRORTYPE error = OMX_AllocateBuffer(handle_, &buffer_headers_[i], port_definition_.nPortIndex, this, port_definition_.nBufferSize);
     if (error != OMX_ErrorNone)
     {
@@ -96,10 +96,10 @@ void OMXPort::allocate_buffer()
 OMX_BUFFERHEADERTYPE* OMXPort::get_buffer(bool blocking/* = true*/) {
   OMX_U32 index {0};
   while (true) {
-    if (ready_[index]) {
-      ready_[index] = false;
+    if (buffers_[index].ready) {
+      buffers_[index].ready = false;
       Logger::verbose("OMX Port: Port %d buffer %d used", port_definition_.nPortIndex, index);
-      return buffer_headers_[index];
+      return buffers_[index].buffer_header;
     }
     if (++index >= port_definition_.nBufferCountActual) {
       if (blocking == false) return nullptr;

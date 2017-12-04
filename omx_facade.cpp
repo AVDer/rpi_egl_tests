@@ -182,3 +182,62 @@ void OMXFacade::render_file(const std::string& filename) {
     }
   }
 }
+
+void OMXFacade::decode_to_egl(const std::string& filename, egl_image_t egl_image) {
+  OMXComponent decode_component("OMX.broadcom.video_decode");
+  decode_component.setup_ports();
+  OMXComponent render_component("OMX.broadcom.egl_render");
+  render_component.setup_ports();  
+
+  OMX_BUFFERHEADERTYPE* buffer_header;
+  EGLWriter egl_writer(render_component, buffer_header);
+  render_component.add_fill_cb(egl_writer);
+
+  decode_component.enable_ports(false);
+  render_component.enable_ports(false);
+
+  decode_component.change_state(OMX_StateIdle);
+  decode_component.port(130)->set_video_format(OMX_VIDEO_CodingAVC);
+  decode_component.enable_ports(true, {130});
+  decode_component.allocate_buffers({130});
+  decode_component.change_state(OMX_StateExecuting);
+
+  FILE *input_file = fopen(filename.c_str(), "r");
+  int32_t to_read = get_file_size(filename);
+  OMX_BUFFERHEADERTYPE *buff_header;
+
+  decode_component.port(131)->set_flag(PortFlag::changed, false);
+
+  while (!decode_component.port(131)->get_flag(PortFlag::changed)) { 
+    buff_header = decode_component.port(130)->get_buffer();
+    read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
+    if (to_read <= 0) {
+      input_file = freopen(filename.c_str(), "r", input_file);
+      to_read = get_file_size(filename);
+    }
+  }
+
+  setup_tunnel(decode_component, 131, render_component, 220);
+
+  render_component.change_state(OMX_StateIdle);
+  render_component.enable_ports(true, {221});
+
+  OMX_ERRORTYPE error = OMX_UseEGLImage(render_component.handle(), &buffer_header, 221, nullptr, egl_image);
+  if (error != OMX_ErrorNone) {
+    Logger::error("OMX-EGL: UseEGLImage failed: %s", omx_error_to_string(error).c_str());
+  }
+  render_component.change_state(OMX_StateExecuting);
+
+  // Request egl_render to write data to the texture buffer
+  if(OMX_FillThisBuffer(render_component.handle(), buffer_header) != OMX_ErrorNone)
+  {
+    Logger::error("OMX_FillThisBuffer failed.");
+  }
+
+  while (to_read > 0) {
+    buff_header = decode_component.port(130)->get_buffer(false);
+    if (buff_header != nullptr) {
+      read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
+    }
+  }
+}
