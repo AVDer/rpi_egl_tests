@@ -107,9 +107,7 @@ private:
     strftime(buffer, 80, "%H:%M:%S", localtime(&curTime.tv_sec));
     char currentTime[84] = "";
     sprintf(currentTime, "%s:%03d", buffer, milli);
-
-    std::hash<std::thread::id> hasher;
-    printf("%s T:%X ", currentTime, hasher(std::this_thread::get_id()));
+    printf("%s T:%lX ", currentTime, pthread_self());
   }
 
   static LoggingLevel logging_level_;

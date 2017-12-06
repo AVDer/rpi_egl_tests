@@ -16,7 +16,7 @@ void* video_decode(void* param);
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-  Logger::set_logging_level(Logger::LoggingLevel::LoggingVerbose);
+  Logger::set_logging_level(Logger::LoggingLevel::LoggingTrace);
   Logger::trace("General: Main thread started");
 
   EGLHandler egl_handler;
@@ -29,15 +29,15 @@ static const GLfloat BOX_SIZE {0.7f};
 
       // front
 
-      -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.0f,  0.0f,
-      -BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 0.0f,  1.0f,
-      +BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 1.0f,  1.0f,
-      +BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 1.0f,  1.0f,
-      +BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 1.0f,  0.0f,
-      -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.0f,  0.0f,
+      -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.0f,  1.0f,
+      -BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 0.0f,  0.0f,
+      +BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 1.0f,  0.0f,
+      +BOX_SIZE, +BOX_SIZE, -BOX_SIZE, 1.0f,  0.0f,
+      +BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 1.0f,  1.0f,
+      -BOX_SIZE, -BOX_SIZE, -BOX_SIZE, 0.0f,  1.0f,
 
     };
-
+/*
   GLubyte indecies[] = {
     //front
     0, 1, 2, 2, 3, 0,
@@ -52,7 +52,7 @@ static const GLfloat BOX_SIZE {0.7f};
     // down
     0, 4, 7, 7, 3, 0
   };
-
+*/
 
   glViewport(0, 0, egl_handler.screen_width(), egl_handler.screen_height());
 
@@ -74,7 +74,9 @@ static const GLfloat BOX_SIZE {0.7f};
   pthread_t omx_thread;
   pthread_create(&omx_thread, nullptr, video_decode, egl_image);
 
-  for (auto i = 0; i < 10; ++i)
+  auto start = std::chrono::system_clock::now();
+  float rotation {0.f};
+  while (std::chrono::system_clock::now() - start < std::chrono::seconds(20))
   {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -94,9 +96,10 @@ static const GLfloat BOX_SIZE {0.7f};
     glm::mat4 projection;
     glm::mat4 model;
 
-    //projection = glm::perspective(glm::radians(45.0f), (float)egl_handler.screen_width() / (float)egl_handler.screen_height(), 0.1f, 100.0f);
-    //view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -1.f);
-    //model      = glm::rotate(trans, glm::radians(3.0f), glm::vec3(0.0, 1.0, 0.0));
+    model      = glm::rotate(trans, glm::radians(rotation), glm::vec3(1.0, 1.0, 1.0));
+    view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.f));
+    projection = glm::perspective(glm::radians(45.0f), 1.f, 0.1f, 100.0f);
+    rotation += 1;
     trans = projection * view * model;
 
     glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(trans));
@@ -105,8 +108,6 @@ static const GLfloat BOX_SIZE {0.7f};
 
     glFlush();
     eglSwapBuffers(egl_handler.state()->display, egl_handler.state()->surface);
-
-    sleep(1);
   }
 
   return 0;
@@ -115,4 +116,5 @@ static const GLfloat BOX_SIZE {0.7f};
 void* video_decode(void* param) {
   OMXFacade omx_facade;
   omx_facade.decode_to_egl("test.h264", reinterpret_cast<egl_image_t>(param));
+  return nullptr;
 }

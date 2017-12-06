@@ -15,8 +15,7 @@ public:
   buffer_header_(buffer_header)
     {}
   void operator()(OMX_BUFFERHEADERTYPE* buffer_header) {
-    Logger::warning("OMX-EGL: We're here!");
-    OMX_ERRORTYPE error = OMX_FillThisBuffer(component_.handle(), buffer_header_);
+    OMX_ERRORTYPE error = OMX_FillThisBuffer(component_.handle(), buffer_header);
     if (error != OMX_ErrorNone) {
       Logger::error("OMX-EGL: OMX_FillThisBuffer failed in callback: %s", omx_error_to_string(error).c_str());
     }

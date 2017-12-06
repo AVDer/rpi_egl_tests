@@ -218,8 +218,10 @@ void OMXFacade::decode_to_egl(const std::string& filename, egl_image_t egl_image
   }
 
   setup_tunnel(decode_component, 131, render_component, 220);
+  decode_component.enable_ports(true, {131});  
 
   render_component.change_state(OMX_StateIdle);
+  render_component.enable_ports(true, {220});
   render_component.enable_ports(true, {221});
 
   OMX_ERRORTYPE error = OMX_UseEGLImage(render_component.handle(), &buffer_header, 221, nullptr, egl_image);
