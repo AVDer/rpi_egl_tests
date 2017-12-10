@@ -66,8 +66,13 @@ OMX_ERRORTYPE omx_empty_buffer_done(
 {
   OMXComponent *component = reinterpret_cast<OMXComponent *>(pAppData);
   buffer_address_t* buffer_address = reinterpret_cast<buffer_address_t*>(pBuffer->pAppPrivate);
-  Logger::verbose("OMX Empty buffer: [0x%X]: Port: %d, buffer index: %d", pAppData, buffer_address->first, buffer_address->second);
-  component->port(buffer_address->first)->set_buffer_ready(buffer_address->second, true);
+  if (buffer_address) {
+    Logger::verbose("OMX Empty buffer: [0x%X]: Port: %d, buffer index: %d", pAppData, buffer_address->first, buffer_address->second);
+    component->port(buffer_address->first)->set_buffer_ready(buffer_address->second, true);
+  }
+  else {
+    Logger::verbose("OMX Epmty buffer: [0x%X]", pAppData);
+  }
   return OMX_ErrorNone;
 }
 
@@ -228,5 +233,8 @@ void OMXComponent::allocate_buffers(std::vector<OMX_U32> port_indexes)
 }
 
 std::shared_ptr<OMXPort> OMXComponent::port(OMX_U32 port_index) {
+  if (ports_.find(port_index) == std::end(ports_)) {
+    Logger::error("OMX Component: [0x%X] can't access port %d", this, port_index);
+  }
   return ports_[port_index];
 }

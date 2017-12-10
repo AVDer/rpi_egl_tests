@@ -13,11 +13,14 @@ void DispmanxHandler::init()
     VC_RECT_T dst_rect;
     VC_RECT_T src_rect;
     bcm_host_init();
+    screen_width_ = screen_height_ = 0;
     // create an EGL window surface
     success = graphics_get_display_size(0 /* LCD */,
                                         &screen_width_,
                                         &screen_height_);
-    assert(success >= 0);
+    if (success < 0) {
+      Logger::info("Dispmanx: display size get fails");  
+    }
     Logger::info("Dispmanx: screen size: %dx%d", screen_width_, screen_height_);
     dst_rect.x = 0;
     dst_rect.height = screen_height_;

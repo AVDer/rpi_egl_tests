@@ -12,7 +12,9 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-void* video_decode(void* param);
+//void* video_decode(void* param);
+void video_decode(egl_image_t egl_image);
+
 
 int main(int /*argc*/, char ** /*argv*/)
 {
@@ -71,12 +73,12 @@ static const GLfloat BOX_SIZE {0.7f};
   Texture texture(egl_handler.state());
   GLuint texture_id = texture.texture_id();
   egl_image_t egl_image = texture.egl_image();
-  pthread_t omx_thread;
-  pthread_create(&omx_thread, nullptr, video_decode, egl_image);
+  std::thread omx_thread(video_decode, egl_image);
+  omx_thread.detach();
 
   auto start = std::chrono::system_clock::now();
   float rotation {0.f};
-  while (std::chrono::system_clock::now() - start < std::chrono::seconds(20))
+  while (std::chrono::system_clock::now() - start < std::chrono::seconds(10))
   {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -96,9 +98,9 @@ static const GLfloat BOX_SIZE {0.7f};
     glm::mat4 projection;
     glm::mat4 model;
 
-    model      = glm::rotate(trans, glm::radians(rotation), glm::vec3(1.0, 1.0, 1.0));
-    view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.f));
     projection = glm::perspective(glm::radians(45.0f), 1.f, 0.1f, 100.0f);
+    view       = glm::translate(view, glm::vec3(0.f, 0.f, -2.f));
+    model      = glm::rotate(trans, glm::radians(rotation), glm::vec3(0.f, 1.f, 0.f));
     rotation += 1;
     trans = projection * view * model;
 
@@ -113,8 +115,7 @@ static const GLfloat BOX_SIZE {0.7f};
   return 0;
 }
 
-void* video_decode(void* param) {
+void video_decode(egl_image_t egl_image) {
   OMXFacade omx_facade;
-  omx_facade.decode_to_egl("test.h264", reinterpret_cast<egl_image_t>(param));
-  return nullptr;
+  omx_facade.decode_to_egl("test.h264", egl_image);
 }

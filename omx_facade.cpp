@@ -3,17 +3,22 @@
 #include "decode_functions.h"
 #include "logger.h"
 #include "omx_support.h"
+#include "omx_tunnel.h"
 #include "support_functions.h"
 
 OMXFacade::OMXFacade()
 {
   bcm_host_init();
 
-  OMX_ERRORTYPE err{OMX_Init()};
-  if (err != OMX_ErrorNone)
+  OMX_ERRORTYPE error {OMX_Init()};
+  if (error != OMX_ErrorNone)
   {
-    Logger::error("OMX: OMX_Init() failed");
+    Logger::error("OMX: OMX_Init() failed: %s", omx_error_to_string(error).c_str());
   }
+}
+
+OMXFacade::~OMXFacade() {
+  OMX_Deinit();
 }
 
 void OMXFacade::list_components()
@@ -68,15 +73,6 @@ void OMXFacade::list_roles(char *name)
     Logger::debug("OMX: Role: %s", roles[n]);
     free(roles[n]);
   }
-}
-
-void OMXFacade::setup_tunnel(OMXComponent& out_component, OMX_U32 out_port, OMXComponent& in_component, OMX_U32 in_port) {
-  OMX_ERRORTYPE error = OMX_SetupTunnel(out_component.handle(), out_port, in_component.handle(), in_port);
-  if (error != OMX_ErrorNone)
-  {
-    Logger::error("OMX: Tunnel seup failed");
-    return;
-  } 
 }
 
 void OMXFacade::decode_file(const std::string &filename)
@@ -167,9 +163,9 @@ void OMXFacade::render_file(const std::string& filename) {
   decode_component.change_state(OMX_StateIdle);
   decode_component.wait_state(OMX_StateIdle);
 
-  setup_tunnel(decode_component, 131, render_component, 90);
-  decode_component.enable_ports(true, {131});
-  render_component.enable_ports(true, {90});
+  OMXTunnel tunnel(decode_component, 131, render_component, 90);
+  tunnel.activate();
+  
   decode_component.change_state(OMX_StateExecuting);
   decode_component.wait_state(OMX_StateExecuting);
   render_component.change_state(OMX_StateExecuting);
@@ -217,11 +213,10 @@ void OMXFacade::decode_to_egl(const std::string& filename, egl_image_t egl_image
     }
   }
 
-  setup_tunnel(decode_component, 131, render_component, 220);
-  decode_component.enable_ports(true, {131});  
-
+  OMXTunnel tunnel(decode_component, 131, render_component, 220);
+  tunnel.activate();
+  
   render_component.change_state(OMX_StateIdle);
-  render_component.enable_ports(true, {220});
   render_component.enable_ports(true, {221});
 
   OMX_ERRORTYPE error = OMX_UseEGLImage(render_component.handle(), &buffer_header, 221, nullptr, egl_image);
@@ -242,4 +237,6 @@ void OMXFacade::decode_to_egl(const std::string& filename, egl_image_t egl_image
       read_into_buffer_and_empty(input_file, decode_component, buff_header, &to_read);
     }
   }
+
+  std::this_thread::sleep_for(std::chrono::seconds(2));
 }

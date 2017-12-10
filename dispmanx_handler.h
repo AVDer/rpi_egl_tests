@@ -13,10 +13,10 @@ public:
   uint32_t screen_height() const { return screen_height_; }
 
 private:
-  EGL_DISPMANX_WINDOW_T native_window_;
-  DISPMANX_DISPLAY_HANDLE_T dispman_display_;
-  uint32_t screen_width_;
-  uint32_t screen_height_;
+  EGL_DISPMANX_WINDOW_T native_window_ {0, 0, 0};
+  DISPMANX_DISPLAY_HANDLE_T dispman_display_ {0};
+  uint32_t screen_width_ {0};
+  uint32_t screen_height_ {0};
 };
 
 #endif
