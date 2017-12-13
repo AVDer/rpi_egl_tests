@@ -3,8 +3,9 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <memory>
 
-#include "dispmanx_handler.h"
+#include "egl_display_handler.h"
 
 struct egl_state_t
 {
@@ -18,20 +19,17 @@ class EGLHandler {
 
 public:
   void init();
-  void egl_from_dispmanx();
+  void create_window();
   egl_state_t* state() { return &state_; }
-  uint32_t screen_width() const { return dispmanx_handler_.screen_width(); }
-  uint32_t screen_height() const { return dispmanx_handler_.screen_height(); }
+  uint32_t screen_width() const { return display_handler_->screen_width(); }
+  uint32_t screen_height() const { return display_handler_->screen_height(); }
 
-  [[deprecated]] EGL_DISPMANX_WINDOW_T& native_window() { return dispmanx_handler_.native_window(); }
-  [[deprecated]] DISPMANX_DISPLAY_HANDLE_T& dispman_display() { return dispmanx_handler_.dispman_display(); }
-
-  EGLHandler();
+  explicit EGLHandler(std::shared_ptr<EGLDisplayHandler> display_handler);
   ~EGLHandler();
 
 private:
   egl_state_t state_;
-  DispmanxHandler dispmanx_handler_;
+  std::shared_ptr<EGLDisplayHandler> display_handler_;
   
 };
 

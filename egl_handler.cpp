@@ -1,11 +1,9 @@
 #include "egl_handler.h"
 
-#include <cassert>
-
 #include "logger.h"
 
-EGLHandler::EGLHandler() : state_(),
-                           dispmanx_handler_()
+EGLHandler::EGLHandler(std::shared_ptr<EGLDisplayHandler> display_handler) : state_(),
+                           display_handler_(display_handler)
 {
   state_.display = EGL_NO_DISPLAY;
   state_.surface = EGL_NO_SURFACE;
@@ -16,7 +14,8 @@ void EGLHandler::init()
 {
   EGLint num_configs;
   EGLBoolean result;
-  bcm_host_init();
+
+  display_handler_->init();
 
   static const EGLint attribute_list[] =
       {
@@ -33,36 +32,44 @@ void EGLHandler::init()
           EGL_NONE};
 
   // get an EGL display connection
-  state_.display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  state_.display = eglGetDisplay(display_handler_->display());
   // initialize the EGL display connection
   result = eglInitialize(state_.display, NULL, NULL);
   // get an appropriate EGL frame buffer configuration
   result = eglChooseConfig(state_.display, attribute_list, &state_.config, 1,
                            &num_configs);
-  assert(EGL_FALSE != result);
+  if (result == EGL_FALSE) {
+    Logger::error("EGL: Configuration choose fails");
+  }
   // Choose the OpenGL ES API
   result = eglBindAPI(EGL_OPENGL_ES_API);
-  assert(EGL_FALSE != result);
+  if (result == EGL_FALSE) {
+    Logger::error("EGL: EGL API binding fails");
+  }
   // create an EGL rendering context
   state_.context = eglCreateContext(state_.display,
                                     state_.config, EGL_NO_CONTEXT,
                                     context_attributes);
-  assert(state_.context != EGL_NO_CONTEXT);
-
-  dispmanx_handler_.init();
+  if (state_.context == EGL_NO_CONTEXT) {
+    Logger::error("EGL: Context create fails");
+  }
 }
 
-void EGLHandler::egl_from_dispmanx()
+void EGLHandler::create_window()
 {
   EGLBoolean result;
   state_.surface = eglCreateWindowSurface(state_.display,
                                           state_.config,
-                                          &dispmanx_handler_.native_window(),
+                                          display_handler_->window(),
                                           NULL);
-  assert(state_.surface != EGL_NO_SURFACE);
+  if (state_.surface == EGL_NO_SURFACE) {
+    Logger::error("EGL: Surface create fails");
+  }
   // connect the context to the surface
   result = eglMakeCurrent(state_.display, state_.surface, state_.surface, state_.context);
-  assert(EGL_FALSE != result);
+  if (result == EGL_FALSE) {
+    Logger::error("EGL: Make current fails");
+  }
 }
 
 EGLHandler::~EGLHandler()
@@ -87,9 +94,4 @@ EGLHandler::~EGLHandler()
   {
     Logger::debug("EGL: Thread resources released ok");
   }
-  if (vc_dispmanx_display_close(dispmanx_handler_.dispman_display()) == 0)
-  {
-    Logger::debug("Dispmanx: Display released ok");
-  }
-  bcm_host_deinit();
 }

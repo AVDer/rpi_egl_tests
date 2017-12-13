@@ -1,6 +1,9 @@
 #include <GLES2/gl2.h>
 
 #include "basic_shader.h"
+#include "dispmanx_handler.h"
+#include "wayland_handler.h"
+#include "egl_display_handler.h"
 #include "egl_handler.h"
 #include "gl_texture.h"
 #include "logger.h"
@@ -12,18 +15,19 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-//void* video_decode(void* param);
 void video_decode(egl_image_t egl_image);
-
 
 int main(int /*argc*/, char ** /*argv*/)
 {
   Logger::set_logging_level(Logger::LoggingLevel::LoggingTrace);
   Logger::trace("General: Main thread started");
 
-  EGLHandler egl_handler;
+  //std::shared_ptr<EGLDisplayHandler> display_handler {new DispmanxHandler};
+  std::shared_ptr<EGLDisplayHandler> display_handler {new WaylandHandler};
+
+  EGLHandler egl_handler(display_handler);
   egl_handler.init();
-  egl_handler.egl_from_dispmanx();
+  egl_handler.create_window();
 
 static const GLfloat BOX_SIZE {0.7f};
 
@@ -69,17 +73,18 @@ static const GLfloat BOX_SIZE {0.7f};
   GLint mvp_location = glGetUniformLocation(shader_program.shader_id(), "u_mvp");
 
   // Load the texture
-  //Texture textue(TGAFile("corsairs.tga"));
-  Texture texture(egl_handler.state());
+  Texture texture(TGAFile("corsairs.tga"));
+  //Texture texture(egl_handler.state());
   GLuint texture_id = texture.texture_id();
-  egl_image_t egl_image = texture.egl_image();
-  std::thread omx_thread(video_decode, egl_image);
-  omx_thread.detach();
+  //egl_image_t egl_image = texture.egl_image();
+  //std::thread omx_thread(video_decode, egl_image);
+  //omx_thread.detach();
 
   auto start = std::chrono::system_clock::now();
   float rotation {0.f};
   while (std::chrono::system_clock::now() - start < std::chrono::seconds(10))
   {
+    display_handler->dispatch();
     glClear(GL_COLOR_BUFFER_BIT);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vertices);

@@ -4,6 +4,18 @@
 
 #include "logger.h"
 
+DispmanxHandler::DispmanxHandler() {
+  bcm_host_init();
+}
+
+DispmanxHandler::~DispmanxHandler() {
+  if (vc_dispmanx_display_close(dispman_display_) == 0)
+  {
+    Logger::debug("Dispmanx: Display released ok");
+  }
+  bcm_host_deinit();
+}
+
 void DispmanxHandler::init()
 {
     int32_t success = 0;
@@ -12,7 +24,6 @@ void DispmanxHandler::init()
     DISPMANX_UPDATE_HANDLE_T dispman_update;
     VC_RECT_T dst_rect;
     VC_RECT_T src_rect;
-    bcm_host_init();
     screen_width_ = screen_height_ = 0;
     // create an EGL window surface
     success = graphics_get_display_size(0 /* LCD */,
